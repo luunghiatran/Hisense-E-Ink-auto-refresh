@@ -1,3 +1,7 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -30,7 +34,10 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -48,6 +55,26 @@ android {
         // 禁用 ExpiredTargetSdkVersion 检查
         disable.add("ExpiredTargetSdkVersion")
     }
+
+    // 修复文件名修改
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.forEach { output ->
+            val outputImpl = output as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            outputImpl.outputFileName = buildString {
+                append("${variant.applicationId}")
+                append("_v${variant.versionName}")
+                append("(${variant.versionCode})")
+                append("_${variant.buildType.name}")
+                append("_${getDateTime()}.apk")
+            }
+        }
+    }
+}
+
+// 获取时间戳的函数
+fun getDateTime(): String {
+    return SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
 }
 
 dependencies {
