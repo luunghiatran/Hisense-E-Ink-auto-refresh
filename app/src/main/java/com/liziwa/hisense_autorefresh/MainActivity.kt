@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +28,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: AppPreferences
+
+    private var dialog: AlertDialog? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -47,6 +51,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.cbMonitorGlobal.setOnClickListener { this.onClick(it) }
         binding.btnMonitorList.setOnClickListener { this.onClick(it) }
         binding.btnSave.setOnClickListener { this.onClick(it) }
+        binding.btnTest.setOnClickListener { this.onClick(it) }
+        binding.btnExit.setOnClickListener { this.onClick(it) }
     }
 
     fun updateUI() {
@@ -85,9 +91,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             Editable.Factory.getInstance().newEditable(prefs.ignoreTime.toString())
         binding.cbMonitorTouch.isChecked = prefs.monitorTouch
         binding.cbMonitorKey.isChecked = prefs.monitorKey
+        val monitorGlobal = binding.cbMonitorGlobal.tag as Boolean? ?: prefs.monitorGlobal
         binding.cbMonitorGlobal.isChecked =
-            prefs.monitorGlobal || TextUtils.isEmpty(prefs.targetPackageName)
-        binding.btnMonitorList.isEnabled = !prefs.monitorGlobal
+            monitorGlobal || TextUtils.isEmpty(prefs.targetPackageName)
+        binding.btnMonitorList.isEnabled = !monitorGlobal  && !TextUtils.isEmpty(prefs.targetPackageName)
     }
 
 
@@ -110,8 +117,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             binding.cbMonitorGlobal -> {
-                prefs.monitorGlobal = binding.cbMonitorGlobal.isChecked
-                updateUI()
+                binding.btnMonitorList.isEnabled = !binding.cbMonitorGlobal.isChecked
+                binding.cbMonitorGlobal.tag = binding.cbMonitorGlobal.isChecked
             }
 
             binding.btnMonitorList -> {
@@ -119,7 +126,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             binding.btnSave -> {
-                if (TextUtils.isEmpty(binding.etInterval.text) || TextUtils.isEmpty(binding.etDelay.text) || TextUtils.isEmpty(binding.etIgnore.text)) {
+                if (TextUtils.isEmpty(binding.etInterval.text) || TextUtils.isEmpty(binding.etDelay.text) || TextUtils.isEmpty(
+                        binding.etIgnore.text
+                    )
+                ) {
                     AlertDialog.Builder(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_empty_config)
@@ -134,7 +144,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     prefs.ignoreTime = binding.etIgnore.text.toString().toInt()
                     prefs.monitorKey = binding.cbMonitorKey.isChecked
                     prefs.monitorTouch = binding.cbMonitorTouch.isChecked
+                    prefs.monitorGlobal = binding.cbMonitorGlobal.isChecked
+                    binding.cbMonitorGlobal.tag = null
                     sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                    Toast.makeText(applicationContext, R.string.toast_save, Toast.LENGTH_SHORT)
+                        .show()
                 } catch (e: Exception) {
                     e.printStackTrace()
                     AlertDialog.Builder(this)
@@ -145,6 +159,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         }.show()
                 }
             }
+
+            binding.btnTest -> {
+                Utils.refreshScreen(applicationContext)
+            }
+
+            binding.btnExit -> onBackPressedDispatcher.onBackPressed()
         }
     }
 
@@ -154,6 +174,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         // 请求必要权限
         requestRequiredPermissions()
         updateUI()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "onPause: ")
+        dialog?.dismiss()
+        dialog = null
     }
 
     private fun requestRequiredPermissions(): Boolean {
@@ -188,11 +215,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun requestUsageStatsPermission() {
         Log.d(TAG, "requestUsageStatsPermission: ")
         // 跳转前提示用户
-        AlertDialog.Builder(this)
+        dialog = AlertDialog.Builder(this)
             .setTitle(R.string.request_permission_usage_title)
             .setMessage(R.string.request_permission_usage_message)
             .setPositiveButton(R.string.btn_to_settings) { dialog, which ->
-                dialog.dismiss()
                 val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
                 startActivity(intent)
             }

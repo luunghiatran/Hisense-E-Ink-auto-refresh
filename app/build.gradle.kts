@@ -7,6 +7,15 @@ android {
     namespace = "com.liziwa.hisense_autorefresh"
     compileSdk = 36
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("keystore.jks")
+            storePassword = "liziwa"
+            keyAlias = "android"
+            keyPassword = "liziwa"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.liziwa.hisense_autorefresh"
         minSdk = 28
@@ -19,6 +28,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -33,6 +43,11 @@ android {
     dataBinding {
         enable = true
     }
+
+    lint {
+        // 禁用 ExpiredTargetSdkVersion 检查
+        disable.add("ExpiredTargetSdkVersion")
+    }
 }
 
 dependencies {
@@ -44,4 +59,5 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.kotlinx.coroutines.android)
 }

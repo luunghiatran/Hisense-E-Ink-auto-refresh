@@ -26,14 +26,20 @@ class AppListAdapter(
         position: Int
     ) {
         holder.binding.item = items[position]
-        holder.binding.checkedChangeListener = onItemCheckedChangeListener
+        holder.binding.root.setOnClickListener { v ->
+            onItemCheckedChangeListener.onItemCheckedChange(
+                position,
+                items[position],
+                !items[position].isChecked
+            )
+        }
         holder.binding.executePendingBindings()
     }
 
     override fun getItemCount() = items.size
 
     interface OnItemCheckedChangeListener {
-        fun onItemCheckedChange(item: ListItem, checked: Boolean)
+        fun onItemCheckedChange(position: Int, item: ListItem, checked: Boolean)
     }
 
     class ViewHolder(val binding: ItemAppListBinding) : RecyclerView.ViewHolder(binding.root)

@@ -11,6 +11,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.os.SystemClock
@@ -28,6 +31,8 @@ class EInkAccessibilityService : AccessibilityService() {
     private var lastClickTime: Long = 0
     private var interval = 10
     private var ignoreTime = 0
+
+    private var delayTime = 0
     private var monitorTouch = true
     private var monitorKey = true
     private var monitorGlobal = true
@@ -35,30 +40,37 @@ class EInkAccessibilityService : AccessibilityService() {
     private var isServiceActive = false
     private var choiceApps: List<String> = mutableListOf()
 
+    private var ignoreApps = arrayOf<String>("com.android.systemui")
+
     companion object {
         const val ACTION_CONFIG_CHANGE = "com.liziwa.hisense_autorefresh.ACTION_CONFIG_CHANGE"
         var SERVICE_CONNECT = false
-        const val NOTIFICATION_ID = 1
-        const val CHANNEL_ID = "accessibility_service_channel"
+        private const val NOTIFICATION_ID = 1
+        private const val CHANNEL_ID = "accessibility_service_channel"
+
+        private const val MSG_REFRESH_DISPLAY = 101
     }
 
     fun updateConfig() {
         isServiceActive = prefs.serviceSwitch
         interval = prefs.interval
         ignoreTime = prefs.ignoreTime
+        delayTime = prefs.delayTime
         monitorTouch = prefs.monitorTouch
         monitorKey = prefs.monitorKey
         monitorGlobal = prefs.monitorGlobal
         choiceApps = prefs.targetPackageName?.split(",")?.filter({ it.isNotEmpty() }) ?: emptyList()
         clickCount = 0
-        Log.d(TAG, "updateConfig: " +
-                "isServiceActive=$isServiceActive, " +
-                "interval=$interval, " +
-                "ignoreTime=$ignoreTime, " +
-                "monitorTouch=$monitorTouch, " +
-                "monitorKey=$monitorKey, " +
-                "monitorGlobal=$monitorGlobal, " +
-                "choiceApps=${prefs.targetPackageName}, ")
+        Log.d(
+            TAG, "updateConfig: " +
+                    "isServiceActive=$isServiceActive, " +
+                    "interval=$interval, " +
+                    "ignoreTime=$ignoreTime, " +
+                    "monitorTouch=$monitorTouch, " +
+                    "monitorKey=$monitorKey, " +
+                    "monitorGlobal=$monitorGlobal, " +
+                    "choiceApps=${prefs.targetPackageName}, "
+        )
     }
 
     override fun onCreate() {
@@ -83,6 +95,14 @@ class EInkAccessibilityService : AccessibilityService() {
         }
     }
 
+    var myHandler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            if (msg.what == MSG_REFRESH_DISPLAY) {
+                Utils.refreshScreen(applicationContext)
+            }
+        }
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -108,7 +128,10 @@ class EInkAccessibilityService : AccessibilityService() {
         if (!isServiceActive) return false
         if (event != null && event.action == KeyEvent.ACTION_DOWN) {
             Log.d(TAG, "onKeyEvent: ${event.keyCode}")
-            if (monitorKey && (monitorGlobal || (currentPackage != null && choiceApps.contains(currentPackage)))) {
+            if (monitorKey && (monitorGlobal || choiceApps.isEmpty() || (currentPackage != null && choiceApps.contains(
+                    currentPackage
+                )))
+            ) {
                 userOperating()
             }
 
@@ -143,12 +166,12 @@ class EInkAccessibilityService : AccessibilityService() {
 
     private fun handleWindowStateChanged(event: AccessibilityEvent) {
         val newPackage = event.packageName?.toString()
-
+        if (ignoreApps.contains(newPackage)) return
         if (newPackage != currentPackage) {
             Log.d(TAG, "应用切换: $currentPackage -> $newPackage")
             currentPackage = newPackage
             // 应用切换，重置计数
-            if (currentPackage != null && !monitorGlobal && !choiceApps.contains(currentPackage)) {
+            if (currentPackage != null && !monitorGlobal && !choiceApps.isEmpty() && !choiceApps.contains(currentPackage)) {
                 //切换到目标之外，重置计数
                 clickCount = 0
             }
@@ -157,7 +180,10 @@ class EInkAccessibilityService : AccessibilityService() {
 
     private fun handleViewClicked(event: AccessibilityEvent) {
         // 只处理目标应用内的点击
-        if (monitorTouch && (monitorGlobal || (currentPackage != null && choiceApps.contains(currentPackage)))) {
+        if (monitorTouch && (monitorGlobal || choiceApps.isEmpty() || (currentPackage != null && choiceApps.contains(
+                currentPackage
+            )))
+        ) {
             userOperating()
         }
     }
@@ -174,7 +200,8 @@ class EInkAccessibilityService : AccessibilityService() {
 
             if (clickCount >= interval) {
                 // 触发全局刷新
-                performGlobalRefresh()
+                myHandler.removeMessages(MSG_REFRESH_DISPLAY)
+                myHandler.sendEmptyMessageDelayed(MSG_REFRESH_DISPLAY, delayTime.toLong())
                 clickCount = 0 // 重置计数
                 Log.d(TAG, "触发全局刷新")
             }
@@ -223,7 +250,7 @@ class EInkAccessibilityService : AccessibilityService() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID).apply {
             setContentTitle(getString(R.string.notification_title)) // 通知标题
             setContentText(getString(R.string.notification_text)) // 通知内容
-            setSmallIcon(android.R.drawable.ic_dialog_info) // 必须设置小图标
+            setSmallIcon(R.drawable.icon) // 必须设置小图标
             setContentIntent(pendingIntent) // 设置点击行为
             priority = NotificationCompat.PRIORITY_LOW
             setCategory(Notification.CATEGORY_SERVICE)

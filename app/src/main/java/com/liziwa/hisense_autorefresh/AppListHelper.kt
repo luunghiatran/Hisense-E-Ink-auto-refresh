@@ -1,4 +1,5 @@
 package com.liziwa.hisense_autorefresh
+
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,10 +19,11 @@ object AppListHelper {
         }
 
         return when {
-            // Android 11+ 需要特殊处理包可见性
+            // Android 13+ 需要特殊处理包可见性
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
                 getLauncherAppsApi33(context, mainIntent)
             }
+
             else -> {
                 getLauncherAppsLegacy(pm, mainIntent)
             }
