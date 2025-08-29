@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">海信墨水屏自动刷新</string>
+    <string name="title_activity_main">海信墨水屏自动刷新工具</string>
+    <string name="title_activity_apps">监控应用列表</string>
+    <string name="accessibility_service_description">获取屏幕及按键操作次数，并根据间隔刷新墨水屏</string>
+    <string name="tv_service_status">服务状态</string>
+    <string name="tv_accessibility_status">无障碍服务状态：</string>
+    <string name="tv_status_active">已启动</string>
+    <string name="tv_status_stop">已停止</string>
+    <string name="tv_status_error">服务启动失败</string>
+    <string name="btn_on">开启</string>
+    <string name="btn_off">关闭</string>
+    <string name="btn_to_settings">去设置</string>
+    <string name="tv_monitor_status">全局监控状态：</string>
+    <string name="tv_interval">触发刷新间隔次数（触摸/按键）</string>
+    <string name="tv_delay">触发刷新时延时（毫秒）</string>
+    <string name="tv_ignore">过滤连续点击时间（毫秒）</string>
+    <string name="tv_config_title">参数配置</string>
+    <string name="tv_monitor_key">监听按键</string>
+    <string name="tv_monitor_touch">监听触摸</string>
+    <string name="tv_monitor_global">监控系统所有应用</string>
+    <string name="btn_monitor_list">配置监控应用</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_back">返回</string>
+    <string name="btn_exit">退出</string>
+    <string name="btn_confirm">确认</string>
+    <string name="error">错误</string>
+    <string name="error_empty_config">请填写完整参数</string>
+    <string name="error_empty_format">参数格式错误</string>
+    <string name="notification_title">墨水屏监控服务已启动</string>
+    <string name="notification_desc">墨水屏监控服务运行通知</string>
+    <string name="notification_text">点击配置参数</string>
+    <string name="request_permission_usage_title">需要使用情况统计权限</string>
+    <string name="request_permission_usage_message">此功能需要访问应用使用情况统计信息，请前往设置中开启权限。</string>
+
+</resources>

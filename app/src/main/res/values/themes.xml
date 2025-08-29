@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="colorAccent">@color/black</item>
+        <item name="actionBarStyle">@style/MyActionBar</item>
+    </style>
+
+    <style name="MyActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="background">@color/white</item>
+        <item name="titleTextStyle">@style/MyActionBarTitle</item>
+    </style>
+
+    <style name="MyActionBarTitle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="defTextStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/def_text_size</item>
+        <item name="android:textColor">@drawable/text_selector</item>
+    </style>
+
+    <style name="areaTitleStyle" parent="defTextStyle">
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:textSize">@dimen/area_text_size</item>
+        <item name="android:textColor">@color/disable_text</item>
+    </style>
+
+    <style name="defButtonStyle" parent="defTextStyle">
+        <item name="android:background">@drawable/btn_selector</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:textSize">@dimen/def_btn_size</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">30dp</item>
+    </style>
+
+    <style name="areaStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingLeft">@dimen/area_padding</item>
+        <item name="android:paddingRight">@dimen/area_padding</item>
+        <item name="android:paddingBottom">@dimen/area_padding_bottom</item>
+        <item name="android:layout_marginLeft">@dimen/area_margin</item>
+        <item name="android:layout_marginRight">@dimen/area_margin</item>
+    </style>
+
+    <style name="defEditStyle" parent="defTextStyle">
+        <item name="android:layout_width">50dp</item>
+        <item name="android:inputType">number</item>
+        <item name="android:background">@null</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:imeOptions">actionDone</item>
+        <item name="android:drawableBottom">@drawable/line</item>
+    </style>
+</resources>
