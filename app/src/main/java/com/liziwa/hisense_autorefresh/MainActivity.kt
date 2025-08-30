@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: AppPreferences
+    private val PERMISSION_REQUEST_OVERLAY = 1001
 
     private var dialog: AlertDialog? = null
 
@@ -94,7 +95,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val monitorGlobal = binding.cbMonitorGlobal.tag as Boolean? ?: prefs.monitorGlobal
         binding.cbMonitorGlobal.isChecked =
             monitorGlobal || TextUtils.isEmpty(prefs.targetPackageName)
-        binding.btnMonitorList.isEnabled = !monitorGlobal  && !TextUtils.isEmpty(prefs.targetPackageName)
+        binding.btnMonitorList.isEnabled =
+            !monitorGlobal && !TextUtils.isEmpty(prefs.targetPackageName)
     }
 
 
@@ -105,6 +107,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             binding.btnMonitorStatusOn -> {
+                if (prefs.permissionOverlay != 1) {
+                    dialog =
+                        PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
+                    return
+                }
                 prefs.serviceSwitch = true
                 updateUI()
                 sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
@@ -183,57 +190,41 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         dialog = null
     }
 
-    private fun requestRequiredPermissions(): Boolean {
-        var allPermissionsGranted = true
-
-        // 检查使用情况统计权限
-        if (!isUsageStatsPermissionGranted()) {
-            requestUsageStatsPermission()
-            allPermissionsGranted = false
-        }
+    private fun requestRequiredPermissions() {
 
         // 检查忽略电池优化权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isIgnoringBatteryOptimizations()) {
-            requestIgnoreBatteryOptimizations()
-            allPermissionsGranted = false
+        if (!PermissionHelper.hasIgnoringBatteryOptimizationsPermission(this)) {
+            if (prefs.permissionIgnoringBatteryOptimizations != 0) {
+                PermissionHelper.requestIgnoreBatteryOptimizationsPermission(this)
+                prefs.permissionIgnoringBatteryOptimizations = 0
+                return
+            }
+        } else {
+            prefs.permissionIgnoringBatteryOptimizations = 1
         }
 
-        Log.d(TAG, "requestRequiredPermissions: $allPermissionsGranted")
-        return allPermissionsGranted
-    }
-
-    private fun isUsageStatsPermissionGranted(): Boolean {
-        // 检查使用情况统计权限
-        val appOps = getSystemService(APP_OPS_SERVICE) as android.app.AppOpsManager
-        val mode = appOps.checkOpNoThrow(
-            android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
-            android.os.Process.myUid(), packageName
-        )
-        return mode == android.app.AppOpsManager.MODE_ALLOWED
-    }
-
-    private fun requestUsageStatsPermission() {
-        Log.d(TAG, "requestUsageStatsPermission: ")
-        // 跳转前提示用户
-        dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.request_permission_usage_title)
-            .setMessage(R.string.request_permission_usage_message)
-            .setPositiveButton(R.string.btn_to_settings) { dialog, which ->
-                val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                startActivity(intent)
+        //申请悬浮窗权限
+        if (!PermissionHelper.hasOverlayPermission(this)) {
+            if (prefs.permissionOverlay != 0) {
+                dialog = PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
+                prefs.permissionOverlay = 0
+                prefs.serviceSwitch = false;
+                sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                return
             }
-            .setCancelable(false)
-            .show()
+        } else {
+            prefs.permissionOverlay = 1
+        }
     }
 
-    private fun requestIgnoreBatteryOptimizations() {
-        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-        intent.data = "package:$packageName".toUri()
-        startActivity(intent)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PERMISSION_REQUEST_OVERLAY) {
+            if (!PermissionHelper.hasOverlayPermission(this)) {
+                Toast.makeText(this, R.string.request_permission_overlay_error, Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
     }
 
-    private fun isIgnoringBatteryOptimizations(): Boolean {
-        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
-        return powerManager.isIgnoringBatteryOptimizations(packageName)
-    }
 }

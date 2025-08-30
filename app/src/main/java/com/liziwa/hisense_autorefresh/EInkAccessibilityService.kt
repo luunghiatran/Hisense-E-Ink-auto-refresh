@@ -10,19 +10,22 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
-import android.util.Log
-import android.view.accessibility.AccessibilityEvent
 import android.os.SystemClock
+import android.util.Log
 import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.View
+import android.view.WindowManager
+import android.view.accessibility.AccessibilityEvent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import kotlin.math.log
 
-class EInkAccessibilityService : AccessibilityService() {
+class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     private val TAG = "EInkAccessibilityService"
 
     private lateinit var prefs: AppPreferences
@@ -37,10 +40,13 @@ class EInkAccessibilityService : AccessibilityService() {
     private var monitorKey = true
     private var monitorGlobal = true
     private var currentPackage: String? = null
-    private var isServiceActive = false
+    private var serviceSwitch = false
     private var choiceApps: List<String> = mutableListOf()
 
     private var ignoreApps = arrayOf<String>("com.android.systemui")
+
+    private var addTouchView = false;
+    private lateinit var touchView: View
 
     companion object {
         const val ACTION_CONFIG_CHANGE = "com.liziwa.hisense_autorefresh.ACTION_CONFIG_CHANGE"
@@ -52,7 +58,7 @@ class EInkAccessibilityService : AccessibilityService() {
     }
 
     fun updateConfig() {
-        isServiceActive = prefs.serviceSwitch
+        serviceSwitch = prefs.serviceSwitch
         interval = prefs.interval
         ignoreTime = prefs.ignoreTime
         delayTime = prefs.delayTime
@@ -63,7 +69,7 @@ class EInkAccessibilityService : AccessibilityService() {
         clickCount = 0
         Log.d(
             TAG, "updateConfig: " +
-                    "isServiceActive=$isServiceActive, " +
+                    "serviceSwitch=$serviceSwitch, " +
                     "interval=$interval, " +
                     "ignoreTime=$ignoreTime, " +
                     "monitorTouch=$monitorTouch, " +
@@ -71,6 +77,11 @@ class EInkAccessibilityService : AccessibilityService() {
                     "monitorGlobal=$monitorGlobal, " +
                     "choiceApps=${prefs.targetPackageName}, "
         )
+        if (prefs.permissionOverlay == 1 && serviceSwitch) {
+            createTouchCapture()
+        } else {
+            deleteTouchCapture()
+        }
     }
 
     override fun onCreate() {
@@ -104,6 +115,39 @@ class EInkAccessibilityService : AccessibilityService() {
         }
     }
 
+    private fun createTouchCapture() {
+        if (addTouchView) return
+        Log.d(TAG, "createTouchCapture: ")
+        if (!this::touchView.isInitialized) {
+            touchView = View(applicationContext)
+            touchView.setOnTouchListener(this)
+        }
+
+        val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+
+        val lp = WindowManager.LayoutParams(
+            1,
+            1,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            flags,
+            PixelFormat.TRANSPARENT
+        )
+
+        // 添加到窗口管理器
+        val wm = getSystemService(WINDOW_SERVICE) as WindowManager
+        wm.addView(touchView, lp)
+        addTouchView = true
+    }
+
+    private fun deleteTouchCapture() {
+        if (!addTouchView) return
+        Log.d(TAG, "deleteTouchCapture: ")
+        val wm = getSystemService(WINDOW_SERVICE) as WindowManager
+        wm.removeView(touchView)
+        addTouchView = false
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.d(TAG, "无障碍服务已连接")
@@ -125,9 +169,14 @@ class EInkAccessibilityService : AccessibilityService() {
     }
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
-        if (!isServiceActive) return false
+        if (!serviceSwitch) return false
         if (event != null && event.action == KeyEvent.ACTION_DOWN) {
-            Log.d(TAG, "onKeyEvent: ${event.keyCode}")
+            Log.d(
+                TAG, "onKeyEvent: monitorKey=$monitorKey, " +
+                        "monitorGlobal=$monitorGlobal, " +
+                        "currentPackage=$currentPackage, " +
+                        "choiceApps=${choiceApps.size}"
+            )
             if (monitorKey && (monitorGlobal || choiceApps.isEmpty() || (currentPackage != null && choiceApps.contains(
                     currentPackage
                 )))
@@ -139,28 +188,35 @@ class EInkAccessibilityService : AccessibilityService() {
         return false
     }
 
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        if (event == null) return false
+        if (event.action == MotionEvent.ACTION_OUTSIDE) {
+            Log.d(
+                TAG, "onTouchEvent: monitorTouch=$monitorTouch, " +
+                        "monitorGlobal=$monitorGlobal, " +
+                        "currentPackage=$currentPackage, " +
+                        "choiceApps=${choiceApps.size}"
+            )
+            // 只处理目标应用内的点击
+            if (monitorTouch && (monitorGlobal || choiceApps.isEmpty() || (currentPackage != null && choiceApps.contains(
+                    currentPackage
+                )))
+            ) {
+                userOperating()
+            }
+        }
+        return false
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        if (!isServiceActive) return
+        if (!serviceSwitch) return
 
         try {
-            when (event.eventType) {
-                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-                    handleWindowStateChanged(event)
-                }
-
-                AccessibilityEvent.TYPE_VIEW_CLICKED -> {
-                    handleViewClicked(event)
-                }
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                handleWindowStateChanged(event)
             }
         } catch (e: Exception) {
             Log.e(TAG, "处理无障碍事件时出错", e)
-        } finally {
-            // 确保资源被正确释放
-            try {
-                event.source?.recycle()
-            } catch (e: Exception) {
-                Log.w(TAG, "回收事件资源时出错", e)
-            }
         }
     }
 
@@ -171,24 +227,19 @@ class EInkAccessibilityService : AccessibilityService() {
             Log.d(TAG, "应用切换: $currentPackage -> $newPackage")
             currentPackage = newPackage
             // 应用切换，重置计数
-            if (currentPackage != null && !monitorGlobal && !choiceApps.isEmpty() && !choiceApps.contains(currentPackage)) {
+            if (currentPackage != null && !monitorGlobal && !choiceApps.isEmpty() && !choiceApps.contains(
+                    currentPackage
+                )
+            ) {
                 //切换到目标之外，重置计数
                 clickCount = 0
             }
         }
     }
 
-    private fun handleViewClicked(event: AccessibilityEvent) {
-        // 只处理目标应用内的点击
-        if (monitorTouch && (monitorGlobal || choiceApps.isEmpty() || (currentPackage != null && choiceApps.contains(
-                currentPackage
-            )))
-        ) {
-            userOperating()
-        }
-    }
-
     fun userOperating() {
+        if (packageName.equals(currentPackage)) return
+        Log.d(TAG, "userOperating: ")
         val currentTime = SystemClock.elapsedRealtime()
         val timeDiff = currentTime - lastClickTime
 
@@ -207,19 +258,6 @@ class EInkAccessibilityService : AccessibilityService() {
             }
         }
         lastClickTime = currentTime
-    }
-
-    private fun performGlobalRefresh() {
-        // 这里调用你的全局刷新代码
-        // 例如: yourRefreshFunction()
-
-        // 作为示例，这里发送广播通知可能需要刷新的应用
-        try {
-            val intent = Intent("com.liziwa.hisense_autorefresh.ACTION_REFRESH_SCREEN")
-            sendBroadcast(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "发送刷新广播时出错", e)
-        }
     }
 
     private fun createNotificationChannel() {
@@ -276,6 +314,7 @@ class EInkAccessibilityService : AccessibilityService() {
         super.onDestroy()
         SERVICE_CONNECT = false
         Log.d(TAG, "无障碍服务被销毁")
+        deleteTouchCapture()
         unregisterReceiver(myReceiver)
     }
 }

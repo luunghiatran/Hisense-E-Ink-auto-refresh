@@ -19,3 +19,19 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# 保留必要的类（根据你的项目调整）
+-keep class com.liziwa.hisense_autorefresh.** { *; }
+-keepclassmembers class com.liziwa.hisense_autorefresh.** { *; }
+
+# 保留注解
+-keepattributes *Annotation*
+
+# 保留序列化类
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}

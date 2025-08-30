@@ -9,7 +9,6 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -20,10 +19,9 @@ import com.liziwa.hisense_autorefresh.databinding.ActivityAppsBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Arrays
 import kotlin.coroutines.CoroutineContext
+import com.liziwa.hisense_autorefresh.AppListAdapter.ListItem
 
 class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
 
@@ -62,7 +60,8 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
     private fun getAllApps() {
         launch {
             val choiceApps = prefs.targetPackageName?.split(",")?.filter({ it.isNotEmpty() })
-            AppListHelper.getLauncherApps(applicationContext).forEach { it ->
+            Utils.getLauncherApps(applicationContext)
+                .filter { !packageName.equals(it.packageName) }.forEach { it ->
                 appItems.add(
                     ListItem(
                         it.name,

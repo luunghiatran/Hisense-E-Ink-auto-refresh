@@ -1,5 +1,6 @@
 package com.liziwa.hisense_autorefresh
 
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -43,4 +44,11 @@ class AppListAdapter(
     }
 
     class ViewHolder(val binding: ItemAppListBinding) : RecyclerView.ViewHolder(binding.root)
+
+    data class ListItem(
+        val title: String,
+        val pkg: String,
+        val icon: Drawable,
+        var isChecked: Boolean = false
+    )
 }

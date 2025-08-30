@@ -29,7 +29,7 @@ class AppPreferences private constructor(context: Context){
         set(value) = prefs.edit { putInt("delay_time", value).apply() }
 
     var ignoreTime: Int
-        get() = prefs.getInt("ignore_time", 5000)
+        get() = prefs.getInt("ignore_time", 2000)
         set(value) = prefs.edit { putInt("ignore_time", value).apply() }
 
     var monitorTouch: Boolean
@@ -43,4 +43,16 @@ class AppPreferences private constructor(context: Context){
     var monitorGlobal: Boolean
         get() = prefs.getBoolean("monitor_global", true)
         set(value) = prefs.edit { putBoolean("monitor_global", value).apply() }
+
+    var permissionIgnoringBatteryOptimizations: Int
+        get() = prefs.getInt("permission_ignoring_battery_optimizations", -1)
+        set(value) = prefs.edit { putInt("permission_ignoring_battery_optimizations", value).apply() }
+
+    var permissionOverlay: Int
+        get() = prefs.getInt("permission_overlay", -1)
+        set(value) = prefs.edit { putInt("permission_overlay", value).apply() }
+
+    var permissionUsageStats: Int
+        get() = prefs.getInt("permission_usage_stats", -1)
+        set(value) = prefs.edit { putInt("permission_usage_stats", value).apply() }
 }

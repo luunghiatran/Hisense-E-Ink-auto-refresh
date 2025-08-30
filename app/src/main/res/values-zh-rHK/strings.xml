@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">海信墨水屏自動刷新</string>
     <string name="title_activity_main">墨水屏刷新</string>
-    <string name="title_activity_apps">監控應用列表</string>
-    <string name="accessibility_service_description">獲取屏幕及按鍵操作次數，並根據間隔刷新墨水屏</string>
+    <string name="title_activity_apps">監控應用程式列表</string>
+    <string name="accessibility_service_description">無障礙服務用於獲取屏幕及按鍵操作次數，並根據間隔刷新墨水屏</string>
     <string name="tv_service_status">服務狀態</string>
     <string name="tv_accessibility_status">無障礙服務狀態：</string>
     <string name="tv_status_active">已啟動</string>
@@ -12,18 +12,19 @@
     <string name="btn_on">開啟</string>
     <string name="btn_off">關閉</string>
     <string name="btn_to_settings">去設定</string>
-    <string name="tv_monitor_status">全局監控狀態：</string>
-    <string name="tv_interval">觸發刷新間隔次數（觸摸/按鍵）</string>
-    <string name="tv_delay">觸發刷新時延時（毫秒）</string>
-    <string name="tv_ignore">過濾連續點擊時間（毫秒）</string>
+    <string name="tv_monitor_status">監控狀態：</string>
+    <string name="tv_interval">觸發屏幕刷新間隔次數（觸摸/按鍵）</string>
+    <string name="tv_delay">觸發屏幕刷新時延遲（毫秒）</string>
+    <string name="tv_ignore">過濾時間段內連續操作（毫秒）</string>
     <string name="tv_config_title">參數配置</string>
-    <string name="tv_monitor_key">監聽按鍵</string>
-    <string name="tv_monitor_touch">監聽觸摸</string>
-    <string name="tv_monitor_global">監控系統所有應用</string>
+    <string name="tv_monitor_key">響應按鍵操作</string>
+    <string name="tv_monitor_touch">響應觸摸操作</string>
+    <string name="tv_monitor_global">監控所有應用程式</string>
     <string name="btn_monitor_list">配置監控應用</string>
     <string name="loading">加載中…</string>
     <string name="btn_save">保存</string>
     <string name="btn_back">返回</string>
+    <string name="btn_cancel">取消</string>
     <string name="btn_exit">退出</string>
     <string name="btn_test">測試刷新</string>
     <string name="btn_confirm">確認</string>
@@ -35,5 +36,8 @@
     <string name="notification_desc">墨水屏監控服務運行通知</string>
     <string name="notification_text">點擊配置參數</string>
     <string name="request_permission_usage_title">需要使用情況統計權限</string>
-    <string name="request_permission_usage_message">此功能需要訪問應用使用情況統計信息，請前往設定中開啟權限。</string>
+    <string name="request_permission_usage_message">此功能需要存取應用程式使用情況統計信息，請前往設定中開啟權限。</string>
+    <string name="request_permission_overlay_title">需要使用懸浮窗權限</string>
+    <string name="request_permission_overlay_message">此功能需要懸浮窗監控觸摸事件，請前往設定中開啟權限。</string>
+    <string name="request_permission_overlay_error">懸浮窗權限被拒絕，無法啟動監控服務</string>
 </resources>
