@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.databinding.ActivityAppsBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -102,7 +103,7 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
                         stringBuilder.append(it.pkg).append(",")
                     }
                 }
-                Log.d(TAG, "onClick: save=$stringBuilder")
+                XLog.d(TAG, "onClick: save=$stringBuilder")
                 prefs.targetPackageName = stringBuilder.toString()
                 prefs.monitorGlobal = TextUtils.isEmpty(stringBuilder.toString())
                 sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))

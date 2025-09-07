@@ -20,6 +20,7 @@ import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
+import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -177,7 +178,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "onResume: ")
+        XLog.d(TAG, "onResume: ")
         // 请求必要权限
         requestRequiredPermissions()
         updateUI()
@@ -185,7 +186,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onPause() {
         super.onPause()
-        Log.d(TAG, "onPause: ")
+        XLog.d(TAG, "onPause: ")
         dialog?.dismiss()
         dialog = null
     }

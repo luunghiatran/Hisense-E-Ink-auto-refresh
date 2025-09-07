@@ -8,6 +8,7 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.elvishew.xlog.XLog
 import java.lang.reflect.InvocationTargetException
 import kotlin.collections.distinctBy
 
@@ -22,7 +23,8 @@ object Utils {
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         )
-        Log.d(TAG, "isAccessibilityServiceEnabled: $enabledServices")
+        XLog.d(TAG, "isAccessibilityServiceEnabled: serviceName=$enabledServices")
+        XLog.d(TAG, "isAccessibilityServiceEnabled: enabledServices=$enabledServices")
         return enabledServices?.contains(serviceName) ?: false
     }
 
@@ -32,10 +34,10 @@ object Utils {
                 .getMethod("forceClear")
                 .invoke(context.getSystemService("epd"))
         } catch (ex: ReflectiveOperationException) {
-            Log.d(TAG, "refreshScreen: error1")
+            XLog.d(TAG, "refreshScreen: error1")
             ex.printStackTrace()
         } catch (ex: InvocationTargetException) {
-            Log.d(TAG, "refreshScreen: error2")
+            XLog.d(TAG, "refreshScreen: error2")
             ex.printStackTrace()
         }
     }

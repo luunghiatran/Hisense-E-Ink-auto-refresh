@@ -24,6 +24,7 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.elvishew.xlog.XLog
 
 class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     private val TAG = "EInkAccessibilityService"
@@ -67,7 +68,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         monitorGlobal = prefs.monitorGlobal
         choiceApps = prefs.targetPackageName?.split(",")?.filter({ it.isNotEmpty() }) ?: emptyList()
         clickCount = 0
-        Log.d(
+        XLog.d(
             TAG, "updateConfig: " +
                     "serviceSwitch=$serviceSwitch, " +
                     "interval=$interval, " +
@@ -86,7 +87,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "无障碍服务创建")
+        XLog.d(TAG, "无障碍服务创建")
         val filter = IntentFilter(ACTION_CONFIG_CHANGE)
         prefs = AppPreferences.getInstance(applicationContext)
         ContextCompat.registerReceiver(
@@ -117,7 +118,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     private fun createTouchCapture() {
         if (addTouchView) return
-        Log.d(TAG, "createTouchCapture: ")
+        XLog.d(TAG, "createTouchCapture: ")
         if (!this::touchView.isInitialized) {
             touchView = View(applicationContext)
             touchView.setOnTouchListener(this)
@@ -142,7 +143,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     private fun deleteTouchCapture() {
         if (!addTouchView) return
-        Log.d(TAG, "deleteTouchCapture: ")
+        XLog.d(TAG, "deleteTouchCapture: ")
         val wm = getSystemService(WINDOW_SERVICE) as WindowManager
         wm.removeView(touchView)
         addTouchView = false
@@ -150,7 +151,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        Log.d(TAG, "无障碍服务已连接")
+        XLog.d(TAG, "无障碍服务已连接")
         SERVICE_CONNECT = true
         // 配置服务
         val info = AccessibilityServiceInfo().apply {
@@ -171,7 +172,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         if (!serviceSwitch) return false
         if (event != null && event.action == KeyEvent.ACTION_DOWN) {
-            Log.d(
+            XLog.d(
                 TAG, "onKeyEvent: monitorKey=$monitorKey, " +
                         "monitorGlobal=$monitorGlobal, " +
                         "currentPackage=$currentPackage, " +
@@ -191,7 +192,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         if (event == null) return false
         if (event.action == MotionEvent.ACTION_OUTSIDE) {
-            Log.d(
+            XLog.d(
                 TAG, "onTouchEvent: monitorTouch=$monitorTouch, " +
                         "monitorGlobal=$monitorGlobal, " +
                         "currentPackage=$currentPackage, " +
@@ -216,7 +217,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
                 handleWindowStateChanged(event)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "处理无障碍事件时出错", e)
+            XLog.e(TAG, "处理无障碍事件时出错", e)
         }
     }
 
@@ -224,7 +225,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         val newPackage = event.packageName?.toString()
         if (ignoreApps.contains(newPackage)) return
         if (newPackage != currentPackage) {
-            Log.d(TAG, "应用切换: $currentPackage -> $newPackage")
+            XLog.d(TAG, "应用切换: $currentPackage -> $newPackage")
             currentPackage = newPackage
             // 应用切换，重置计数
             if (currentPackage != null && !monitorGlobal && !choiceApps.isEmpty() && !choiceApps.contains(
@@ -239,7 +240,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     fun userOperating() {
         if (packageName.equals(currentPackage)) return
-        Log.d(TAG, "userOperating: ")
+        XLog.d(TAG, "userOperating: ")
         val currentTime = SystemClock.elapsedRealtime()
         val timeDiff = currentTime - lastClickTime
 
@@ -247,14 +248,14 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         if (timeDiff > ignoreTime) {
             clickCount++
 
-            Log.d(TAG, "操作计数: $clickCount/$interval, 包名: $currentPackage")
+            XLog.d(TAG, "操作计数: $clickCount/$interval, 包名: $currentPackage")
 
             if (clickCount >= interval) {
                 // 触发全局刷新
                 myHandler.removeMessages(MSG_REFRESH_DISPLAY)
                 myHandler.sendEmptyMessageDelayed(MSG_REFRESH_DISPLAY, delayTime.toLong())
                 clickCount = 0 // 重置计数
-                Log.d(TAG, "触发全局刷新")
+                XLog.d(TAG, "触发全局刷新")
             }
         }
         lastClickTime = currentTime
@@ -302,18 +303,18 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     }
 
     override fun onInterrupt() {
-        Log.d(TAG, "无障碍服务被中断")
+        XLog.d(TAG, "无障碍服务被中断")
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        Log.d(TAG, "无障碍服务断开连接")
+        XLog.d(TAG, "无障碍服务断开连接")
         return super.onUnbind(intent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         SERVICE_CONNECT = false
-        Log.d(TAG, "无障碍服务被销毁")
+        XLog.d(TAG, "无障碍服务被销毁")
         deleteTouchCapture()
         unregisterReceiver(myReceiver)
     }

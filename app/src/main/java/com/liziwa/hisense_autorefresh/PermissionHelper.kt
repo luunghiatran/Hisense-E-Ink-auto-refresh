@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
+import com.elvishew.xlog.XLog
 
 object PermissionHelper {
 
@@ -24,7 +25,7 @@ object PermissionHelper {
 
     // 请求悬浮窗权限（兼容所有版本）
     fun requestOverlayPermission(activity: Activity, requestCode: Int): AlertDialog {
-        Log.d(TAG, "requestOverlayPermission: ")
+        XLog.d(TAG, "requestOverlayPermission: ")
         // 跳转前提示用户
         return AlertDialog.Builder(activity)
             .setTitle(R.string.request_permission_overlay_title)
@@ -44,7 +45,7 @@ object PermissionHelper {
     }
 
     private fun startOverlaySettings(activity: Activity, requestCode: Int) {
-        Log.d(TAG, "startOverlaySettings: ")
+        XLog.d(TAG, "startOverlaySettings: ")
         val intent = Intent(
             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
             "package:${activity.packageName}".toUri()
@@ -54,7 +55,7 @@ object PermissionHelper {
 
     @RequiresApi(Build.VERSION_CODES.R)
     private fun requestOverlayPermissionForAndroid11Plus(activity: Activity, requestCode: Int) {
-        Log.d(TAG, "requestOverlayPermissionForAndroid11Plus: ")
+        XLog.d(TAG, "requestOverlayPermissionForAndroid11Plus: ")
         val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
             data = "package:${activity.packageName}".toUri()
             // 添加额外标志确保返回当前应用
@@ -86,7 +87,7 @@ object PermissionHelper {
     }
 
     fun requestUsageStatsPermission(context: Context): AlertDialog {
-        Log.d(TAG, "requestUsageStatsPermission: ")
+        XLog.d(TAG, "requestUsageStatsPermission: ")
         // 跳转前提示用户
         return AlertDialog.Builder(context)
             .setTitle(R.string.request_permission_usage_title)
