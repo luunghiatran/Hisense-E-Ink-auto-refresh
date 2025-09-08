@@ -1,4 +1,4 @@
-package com.liziwa.hisense_autorefresh
+package com.liziwa.hisense_autorefresh.util
 
 open class SingletonHolder<out T, in A>(private val constructor: (A) -> T) {
 

@@ -33,11 +33,16 @@
     <string name="error_empty_config">Please complete all parameters</string>
     <string name="error_empty_format">Parameter format error</string>
     <string name="notification_title">E-Ink Screen Monitoring Service Started</string>
-    <string name="notification_desc">E-Ink Screen Monitoring Service Notification</string>
     <string name="notification_text">Tap to configure parameters</string>
     <string name="request_permission_usage_title">Usage Statistics Permission Required</string>
     <string name="request_permission_usage_message">This feature requires access to app usage statistics. Please enable the permission in Settings.</string>
     <string name="request_permission_overlay_title">Overlay Permission Required</string>
     <string name="request_permission_overlay_message">This feature requires an overlay to monitor touch events. Please enable the permission in Settings.</string>
     <string name="request_permission_overlay_error">Overlay permission denied. Monitoring service cannot start.</string>
+    <string name="notification_channel_name">Service Notifications</string>
+    <string name="notification_channel_description">E-Ink Auto Refresh Service Notifications</string>
+    <string name="notification_title_error">E-Ink Monitoring Service Failed to Start</string>
+    <string name="notification_desc_error">Service cannot be started, tap for details</string>
+    <string name="notification_text_detailed">Refresh screen after %d response operations, tap to configure parameters</string>
+    <string name="tv_hide_background_task">Hide this app in \"Recent Tasks\"</string>
 </resources>

@@ -8,7 +8,7 @@
         android:layout_height="match_parent"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
-        tools:context=".AppsActivity">
+        tools:context=".activity.AppsActivity">
 
         <Button
             android:id="@+id/btn_save"

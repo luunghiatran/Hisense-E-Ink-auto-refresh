@@ -32,12 +32,18 @@
     <string name="error_empty_config">请填写完整参数</string>
     <string name="error_empty_format">参数格式错误</string>
     <string name="notification_title">墨水屏监控服务已启动</string>
-    <string name="notification_desc">墨水屏监控服务运行通知</string>
     <string name="notification_text">点击配置参数</string>
     <string name="request_permission_usage_title">需要使用情况统计权限</string>
     <string name="request_permission_usage_message">此功能需要访问应用使用情况统计信息，请前往设置中开启权限。</string>
     <string name="request_permission_overlay_title">需要使用悬浮窗权限</string>
     <string name="request_permission_overlay_message">此功能需要悬浮窗监控触摸事件，请前往设置中开启权限。</string>
     <string name="request_permission_overlay_error">悬浮窗权限被拒绝，无法启动监控服务</string>
+
+    <string name="notification_channel_name">服务通知</string>
+    <string name="notification_channel_description">墨水屏自动刷新服务通知</string>
+    <string name="notification_title_error">墨水屏监控服务启动失败</string>
+    <string name="notification_desc_error">服务无法启动，请点击查看详情</string>
+    <string name="notification_text_detailed">%d次响应操作后刷新屏幕，点击配置参数</string>
+    <string name="tv_hide_background_task">在「最近任务」隐藏本应用</string>
 
 </resources>

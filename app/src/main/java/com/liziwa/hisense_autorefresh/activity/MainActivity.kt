@@ -1,31 +1,29 @@
-package com.liziwa.hisense_autorefresh
+package com.liziwa.hisense_autorefresh.activity
 
+import android.app.ActivityManager
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextUtils
-import android.util.Log
-import android.view.KeyEvent
 import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import com.elvishew.xlog.XLog
+import com.liziwa.hisense_autorefresh.AppPreferences
+import com.liziwa.hisense_autorefresh.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.util.PermissionHelper
+import com.liziwa.hisense_autorefresh.R
+import com.liziwa.hisense_autorefresh.util.Utils
 import com.liziwa.hisense_autorefresh.databinding.ActivityMainBinding
+import com.liziwa.hisense_autorefresh.util.NotificationUtils
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
-
-    private val TAG = "MainActivity"
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: AppPreferences
@@ -55,36 +53,39 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.btnSave.setOnClickListener { this.onClick(it) }
         binding.btnTest.setOnClickListener { this.onClick(it) }
         binding.btnExit.setOnClickListener { this.onClick(it) }
+        NotificationUtils.getInstance(this).removeErrorNotification()
     }
 
     fun updateUI() {
         val isAccessibilityServiceEnabled = Utils.isAccessibilityServiceEnabled(applicationContext)
         binding.tvAccessibilityStatus.text = if (isAccessibilityServiceEnabled) {
-            if (EInkAccessibilityService.SERVICE_CONNECT) {
+            prefs.serviceState = true
+            if (EInkAccessibilityService.Companion.SERVICE_CONNECT) {
                 getString(R.string.tv_status_active)
             } else {
                 getString(R.string.tv_status_error)
             }
         } else {
+            prefs.serviceState = false
             getString(R.string.tv_status_stop)
         }
         binding.tvMonitor.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.SERVICE_CONNECT
+            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
         binding.tvMonitorStatus.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.SERVICE_CONNECT
+            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
         binding.btnMonitorStatusOn.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.SERVICE_CONNECT
+            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
         binding.btnMonitorStatusOff.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.SERVICE_CONNECT
+            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
         binding.tvMonitorStatus.text = if (isAccessibilityServiceEnabled && prefs.serviceSwitch) {
             getString(R.string.tv_status_active)
         } else {
             getString(R.string.tv_status_stop)
         }
         binding.btnMonitorStatusOn.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.SERVICE_CONNECT && !prefs.serviceSwitch
+            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT && !prefs.serviceSwitch
         binding.btnMonitorStatusOff.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.SERVICE_CONNECT && prefs.serviceSwitch
+            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT && prefs.serviceSwitch
         binding.etInterval.text =
             Editable.Factory.getInstance().newEditable(prefs.interval.toString())
         binding.etDelay.text =
@@ -98,6 +99,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             monitorGlobal || TextUtils.isEmpty(prefs.targetPackageName)
         binding.btnMonitorList.isEnabled =
             !monitorGlobal && !TextUtils.isEmpty(prefs.targetPackageName)
+        binding.cbHideBackgroundTask.isChecked = prefs.hideBackgroundTask
     }
 
 
@@ -115,13 +117,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
                 prefs.serviceSwitch = true
                 updateUI()
-                sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
             }
 
             binding.btnMonitorStatusOff -> {
                 prefs.serviceSwitch = false
                 updateUI()
-                sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
             }
 
             binding.cbMonitorGlobal -> {
@@ -154,7 +156,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     prefs.monitorTouch = binding.cbMonitorTouch.isChecked
                     prefs.monitorGlobal = binding.cbMonitorGlobal.isChecked
                     binding.cbMonitorGlobal.tag = null
-                    sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                    prefs.hideBackgroundTask = binding.cbHideBackgroundTask.isChecked
+                    sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
                     Toast.makeText(applicationContext, R.string.toast_save, Toast.LENGTH_SHORT)
                         .show()
                 } catch (e: Exception) {
@@ -178,7 +181,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onResume() {
         super.onResume()
-        XLog.d(TAG, "onResume: ")
+        XLog.d("onResume: ")
         // 请求必要权限
         requestRequiredPermissions()
         updateUI()
@@ -186,9 +189,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onPause() {
         super.onPause()
-        XLog.d(TAG, "onPause: ")
+        XLog.d("onPause: ")
         dialog?.dismiss()
         dialog = null
+        toggleRecentsVisibility(prefs.hideBackgroundTask)
+    }
+
+    private fun toggleRecentsVisibility(hide: Boolean) {
+        (getSystemService(ACTIVITY_SERVICE) as ActivityManager)
+            .appTasks
+            .firstOrNull()
+            ?.setExcludeFromRecents(hide)
     }
 
     private fun requestRequiredPermissions() {
@@ -210,7 +221,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 dialog = PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
                 prefs.permissionOverlay = 0
                 prefs.serviceSwitch = false;
-                sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
                 return
             }
         } else {

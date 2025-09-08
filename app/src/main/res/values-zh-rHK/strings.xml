@@ -33,11 +33,16 @@
     <string name="error_empty_config">請填寫完整參數</string>
     <string name="error_empty_format">參數格式錯誤</string>
     <string name="notification_title">墨水屏監控服務已啟動</string>
-    <string name="notification_desc">墨水屏監控服務運行通知</string>
     <string name="notification_text">點擊配置參數</string>
     <string name="request_permission_usage_title">需要使用情況統計權限</string>
     <string name="request_permission_usage_message">此功能需要存取應用程式使用情況統計信息，請前往設定中開啟權限。</string>
     <string name="request_permission_overlay_title">需要使用懸浮窗權限</string>
     <string name="request_permission_overlay_message">此功能需要懸浮窗監控觸摸事件，請前往設定中開啟權限。</string>
     <string name="request_permission_overlay_error">懸浮窗權限被拒絕，無法啟動監控服務</string>
+    <string name="notification_channel_name">服務通知</string>
+    <string name="notification_channel_description">墨水屏自動刷新服務通知</string>
+    <string name="notification_title_error">墨水屏監控服務啟動失敗</string>
+    <string name="notification_desc_error">服務無法啟動，請點擊查看詳情</string>
+    <string name="notification_text_detailed">%d次響應操作後刷新屏幕，點擊配置參數</string>
+    <string name="tv_hide_background_task">在「最近使用程式」隱藏本應用</string>
 </resources>

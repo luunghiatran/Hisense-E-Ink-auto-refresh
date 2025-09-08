@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout>
 
-    <data>
-
-        <variable
-            name="prefs"
-            type="com.liziwa.hisense_autorefresh.AppPreferences" />
-    </data>
-
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".activity.MainActivity">
 
         <TextView
             android:id="@+id/tv_service_status_title"
@@ -203,6 +196,22 @@
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
 
+            <TextView
+                android:id="@+id/tv_hide_background_task"
+                style="@style/defTextStyle"
+                android:layout_marginTop="@dimen/space"
+                android:text="@string/tv_hide_background_task"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_monitor_global" />
+
+            <CheckBox
+                android:id="@+id/cb_hide_background_task"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/tv_hide_background_task"
+                app:layout_constraintLeft_toRightOf="@id/tv_hide_background_task"
+                app:layout_constraintTop_toTopOf="@id/tv_hide_background_task" />
+
             <Button
                 android:id="@+id/btn_save"
                 style="@style/defButtonStyle"
@@ -210,7 +219,7 @@
                 android:text="@string/btn_save"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_monitor_global" />
+                app:layout_constraintTop_toBottomOf="@id/tv_hide_background_task" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

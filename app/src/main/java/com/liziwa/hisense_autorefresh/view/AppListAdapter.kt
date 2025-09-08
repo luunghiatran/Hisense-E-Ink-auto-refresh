@@ -1,4 +1,4 @@
-package com.liziwa.hisense_autorefresh
+package com.liziwa.hisense_autorefresh.view
 
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater

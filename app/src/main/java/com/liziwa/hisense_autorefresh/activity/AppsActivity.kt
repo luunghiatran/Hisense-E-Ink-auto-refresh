@@ -1,4 +1,4 @@
-package com.liziwa.hisense_autorefresh
+package com.liziwa.hisense_autorefresh.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,7 +6,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.text.TextUtils
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -16,20 +15,22 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.elvishew.xlog.XLog
+import com.liziwa.hisense_autorefresh.view.AppListAdapter
+import com.liziwa.hisense_autorefresh.AppPreferences
+import com.liziwa.hisense_autorefresh.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.R
+import com.liziwa.hisense_autorefresh.util.Utils
 import com.liziwa.hisense_autorefresh.databinding.ActivityAppsBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
-import com.liziwa.hisense_autorefresh.AppListAdapter.ListItem
 
 class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
 
-    private val TAG = "AppsActivity"
-
     private lateinit var binding: ActivityAppsBinding
-    private var appItems = mutableListOf<ListItem>()
+    private var appItems = mutableListOf<AppListAdapter.ListItem>()
     private lateinit var prefs: AppPreferences
 
     companion object {
@@ -61,24 +62,30 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
     private fun getAllApps() {
         launch {
             val choiceApps = prefs.targetPackageName?.split(",")?.filter({ it.isNotEmpty() })
+            XLog.d("getAllApps: choiceApps=$choiceApps")
             Utils.getLauncherApps(applicationContext)
                 .filter { !packageName.equals(it.packageName) }.forEach { it ->
-                appItems.add(
-                    ListItem(
-                        it.name,
-                        it.packageName,
-                        it.icon,
-                        choiceApps?.contains(it.packageName) ?: false
+                    XLog.d("getAllApps: $it")
+                    appItems.add(
+                        AppListAdapter.ListItem(
+                            it.name,
+                            it.packageName,
+                            it.icon,
+                            choiceApps?.contains(it.packageName) ?: false
+                        )
                     )
-                )
-            }
+                }
             myHandler.sendEmptyMessage(MSG_UPDATE_APP_LIST)
         }
     }
 
     private val adapter: AppListAdapter =
         AppListAdapter(appItems, object : AppListAdapter.OnItemCheckedChangeListener {
-            override fun onItemCheckedChange(position: Int, item: ListItem, checked: Boolean) {
+            override fun onItemCheckedChange(
+                position: Int,
+                item: AppListAdapter.ListItem,
+                checked: Boolean
+            ) {
                 item.isChecked = checked
                 adapter.notifyItemChanged(position)
             }
@@ -103,10 +110,10 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
                         stringBuilder.append(it.pkg).append(",")
                     }
                 }
-                XLog.d(TAG, "onClick: save=$stringBuilder")
+                XLog.d("onClick: save=$stringBuilder")
                 prefs.targetPackageName = stringBuilder.toString()
                 prefs.monitorGlobal = TextUtils.isEmpty(stringBuilder.toString())
-                sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
                 Toast.makeText(applicationContext, R.string.toast_save, Toast.LENGTH_SHORT).show()
             }
 

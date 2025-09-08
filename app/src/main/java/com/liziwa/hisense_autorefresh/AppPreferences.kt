@@ -3,13 +3,19 @@ package com.liziwa.hisense_autorefresh
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.liziwa.hisense_autorefresh.util.SingletonHolder
 
-class AppPreferences private constructor(context: Context){
+class AppPreferences private constructor(context: Context) {
 
     companion object : SingletonHolder<AppPreferences, Context>(::AppPreferences)
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences("ink_refresh_prefs", Context.MODE_PRIVATE)
+
+
+    var serviceState: Boolean
+        get() = prefs.getBoolean("service_state", false)
+        set(value) = prefs.edit { putBoolean("service_state", value).apply() }
 
     var targetPackageName: String?
         get() = prefs.getString("target_package_name", "")
@@ -55,4 +61,9 @@ class AppPreferences private constructor(context: Context){
     var permissionUsageStats: Int
         get() = prefs.getInt("permission_usage_stats", -1)
         set(value) = prefs.edit { putInt("permission_usage_stats", value).apply() }
+
+    var hideBackgroundTask: Boolean
+        get() = prefs.getBoolean("hide_background_task", true)
+        set(value) = prefs.edit { putBoolean("hide_background_task", value).apply() }
+
 }

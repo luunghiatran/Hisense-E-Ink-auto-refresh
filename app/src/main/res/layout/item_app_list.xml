@@ -5,7 +5,7 @@
 
         <variable
             name="item"
-            type="com.liziwa.hisense_autorefresh.AppListAdapter.ListItem" />
+            type="com.liziwa.hisense_autorefresh.view.AppListAdapter.ListItem" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"

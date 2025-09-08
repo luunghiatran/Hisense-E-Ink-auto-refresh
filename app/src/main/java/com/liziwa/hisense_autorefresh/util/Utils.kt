@@ -1,21 +1,19 @@
-package com.liziwa.hisense_autorefresh
+package com.liziwa.hisense_autorefresh.util
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.elvishew.xlog.XLog
+import com.liziwa.hisense_autorefresh.EInkAccessibilityService
 import java.lang.reflect.InvocationTargetException
-import kotlin.collections.distinctBy
-
 
 object Utils {
-
-    private const val TAG = "Utils"
     fun isAccessibilityServiceEnabled(context: Context): Boolean {
         // 检查无障碍服务是否已启用
         val serviceName = "${context.packageName}.EInkAccessibilityService"
@@ -23,21 +21,23 @@ object Utils {
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         )
-        XLog.d(TAG, "isAccessibilityServiceEnabled: serviceName=$enabledServices")
-        XLog.d(TAG, "isAccessibilityServiceEnabled: enabledServices=$enabledServices")
+        XLog.d("isAccessibilityServiceEnabled: serviceName1=${EInkAccessibilityService::class.simpleName}")
+        XLog.d("isAccessibilityServiceEnabled: serviceName2=$serviceName")
+        XLog.d("isAccessibilityServiceEnabled: enabledServices=$enabledServices")
         return enabledServices?.contains(serviceName) ?: false
     }
 
     fun refreshScreen(context: Context) {
+        XLog.i("refreshScreen")
         try {
             Class.forName("com.hmct.epd.EpdManager")
                 .getMethod("forceClear")
                 .invoke(context.getSystemService("epd"))
         } catch (ex: ReflectiveOperationException) {
-            XLog.d(TAG, "refreshScreen: error1")
+            XLog.d("refreshScreen: error1")
             ex.printStackTrace()
         } catch (ex: InvocationTargetException) {
-            XLog.d(TAG, "refreshScreen: error2")
+            XLog.d("refreshScreen: error2")
             ex.printStackTrace()
         }
     }
@@ -129,7 +129,7 @@ object Utils {
 
     private fun hasQueryAllPackagesPermission(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.checkSelfPermission(android.Manifest.permission.QUERY_ALL_PACKAGES) ==
+            context.checkSelfPermission(Manifest.permission.QUERY_ALL_PACKAGES) ==
                     PackageManager.PERMISSION_GRANTED
         } else {
             true // 低版本不需要此权限
@@ -139,6 +139,6 @@ object Utils {
     data class AppInfo(
         val packageName: String,
         val name: String,
-        val icon: android.graphics.drawable.Drawable
+        val icon: Drawable
     )
 }
