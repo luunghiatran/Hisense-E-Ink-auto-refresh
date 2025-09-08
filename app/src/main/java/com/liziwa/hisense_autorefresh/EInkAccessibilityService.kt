@@ -175,7 +175,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
             event.keyCode == KeyEvent.KEYCODE_MENU
         ) return false
         if (event.action == KeyEvent.ACTION_DOWN) {
-            XLog.d("onKeyEvent: monitorKey=$monitorKey, isTarget=$isTarget")
+            XLog.d("onKeyEvent: monitorKey=$monitorKey, isTarget=$isTarget, keyCode=${event.keyCode}")
             if (monitorKey && isTarget) {
                 userOperating()
             }
