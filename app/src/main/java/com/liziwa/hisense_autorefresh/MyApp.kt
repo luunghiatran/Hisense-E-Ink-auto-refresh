@@ -4,7 +4,7 @@ import android.app.Application
 import com.elvishew.xlog.LogConfiguration
 import com.elvishew.xlog.LogLevel
 import com.elvishew.xlog.XLog
-import com.elvishew.xlog.flattener.DefaultFlattener
+import com.elvishew.xlog.flattener.ClassicFlattener
 import com.elvishew.xlog.printer.AndroidPrinter
 import com.elvishew.xlog.printer.file.FilePrinter
 import com.elvishew.xlog.printer.file.backup.NeverBackupStrategy
@@ -49,7 +49,7 @@ class MyApp : Application() {
             .fileNameGenerator(DateFileNameGenerator())
             .backupStrategy(NeverBackupStrategy())
             .cleanStrategy(FileLastModifiedCleanStrategy(1000 * 60 * 60 * 24 * 7))
-            .flattener(DefaultFlattener())
+            .flattener(ClassicFlattener())
             .writer(SimpleWriter())
             .build()
 
