@@ -49,7 +49,6 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     companion object {
         const val ACTION_CONFIG_CHANGE = "com.liziwa.hisense_autorefresh.ACTION_CONFIG_CHANGE"
-        var SERVICE_CONNECT = false
 
         private const val MSG_REFRESH_DISPLAY = 101
     }
@@ -149,7 +148,6 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     override fun onServiceConnected() {
         super.onServiceConnected()
         XLog.d("无障碍服务已连接")
-        SERVICE_CONNECT = true
         // 配置服务
         val info = AccessibilityServiceInfo().apply {
             eventTypes =
@@ -275,7 +273,6 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        SERVICE_CONNECT = false
         XLog.d("无障碍服务被销毁")
         deleteTouchCapture()
         unregisterReceiver(myReceiver)

@@ -32,7 +32,6 @@ class MyApp : Application() {
         val logPath = getExternalFilesDir("xlog")?.absolutePath
             ?: "${filesDir.absolutePath}/xlog"
 
-        // 确保目录存在
         File(logPath).mkdirs()
 
         // 配置参数

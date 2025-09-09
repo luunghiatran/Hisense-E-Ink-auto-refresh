@@ -8,23 +8,36 @@ import android.os.Build
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
 import androidx.core.content.ContextCompat
+import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.util.NotificationUtils
 import com.liziwa.hisense_autorefresh.util.Utils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
 
+    private val scope = CoroutineScope(Dispatchers.IO + Job())
+
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            XLog.d("BootReceiver: onReceive")
             // 如果服务之前是启动状态，开机后判断服务状态
-//            if (AppPreferences.getInstance(context).serviceState) {
-                startAccessibilityService(context)
-//            }
+            if (AppPreferences.getInstance(context).serviceState) {
+                scope.launch {
+                    delay(5000)
+                    checkAccessibilityService(context)
+                }
+            }
         }
     }
 
-    private fun startAccessibilityService(context: Context) {
+    private fun checkAccessibilityService(context: Context) {
+        XLog.d("BootReceiver: checkAccessibilityService")
         // 检查无障碍服务是否已启用
-        if (!Utils.isAccessibilityServiceEnabled(context) || !EInkAccessibilityService.SERVICE_CONNECT) {
+        if (!Utils.isAccessibilityServiceEnabled(context)) {
             showEnableServiceNotification(context)
         } else {
             // 如果已启用，直接启动服务

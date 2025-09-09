@@ -1,13 +1,17 @@
 package com.liziwa.hisense_autorefresh.util
 
 import android.Manifest
+import android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK
+import android.content.ComponentName
 import android.content.Context
+import android.content.Context.ACCESSIBILITY_SERVICE
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
 import androidx.annotation.RequiresApi
 import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.EInkAccessibilityService
@@ -16,15 +20,11 @@ import java.lang.reflect.InvocationTargetException
 object Utils {
     fun isAccessibilityServiceEnabled(context: Context): Boolean {
         // 检查无障碍服务是否已启用
-        val serviceName = "${context.packageName}.EInkAccessibilityService"
-        val enabledServices = Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        )
-        XLog.d("isAccessibilityServiceEnabled: serviceName1=${EInkAccessibilityService::class.simpleName}")
-        XLog.d("isAccessibilityServiceEnabled: serviceName2=$serviceName")
-        XLog.d("isAccessibilityServiceEnabled: enabledServices=$enabledServices")
-        return enabledServices?.contains(serviceName) ?: false
+        val am = context.getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val expectedId = ComponentName(context, EInkAccessibilityService::class.java).flattenToShortString()
+        val enabledServices = am.getEnabledAccessibilityServiceList(FEEDBACK_ALL_MASK)
+        XLog.d("isAccessibilityServiceEnabled: expectedId=$expectedId, enabledServices=$enabledServices")
+        return enabledServices.any { it.id == expectedId }
     }
 
     fun refreshScreen(context: Context) {

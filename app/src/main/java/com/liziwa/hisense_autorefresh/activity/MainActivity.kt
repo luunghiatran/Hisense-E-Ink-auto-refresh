@@ -60,32 +60,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val isAccessibilityServiceEnabled = Utils.isAccessibilityServiceEnabled(applicationContext)
         binding.tvAccessibilityStatus.text = if (isAccessibilityServiceEnabled) {
             prefs.serviceState = true
-            if (EInkAccessibilityService.Companion.SERVICE_CONNECT) {
-                getString(R.string.tv_status_active)
-            } else {
-                getString(R.string.tv_status_error)
-            }
+            getString(R.string.tv_status_active)
         } else {
             prefs.serviceState = false
             getString(R.string.tv_status_stop)
         }
-        binding.tvMonitor.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
-        binding.tvMonitorStatus.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
-        binding.btnMonitorStatusOn.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
-        binding.btnMonitorStatusOff.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT
+        binding.tvMonitor.isEnabled = isAccessibilityServiceEnabled
+        binding.tvMonitorStatus.isEnabled = isAccessibilityServiceEnabled
+        binding.btnMonitorStatusOn.isEnabled = isAccessibilityServiceEnabled
+        binding.btnMonitorStatusOff.isEnabled = isAccessibilityServiceEnabled
         binding.tvMonitorStatus.text = if (isAccessibilityServiceEnabled && prefs.serviceSwitch) {
             getString(R.string.tv_status_active)
         } else {
             getString(R.string.tv_status_stop)
         }
-        binding.btnMonitorStatusOn.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT && !prefs.serviceSwitch
-        binding.btnMonitorStatusOff.isEnabled =
-            isAccessibilityServiceEnabled && EInkAccessibilityService.Companion.SERVICE_CONNECT && prefs.serviceSwitch
+        binding.btnMonitorStatusOn.isEnabled = isAccessibilityServiceEnabled && !prefs.serviceSwitch
+        binding.btnMonitorStatusOff.isEnabled = isAccessibilityServiceEnabled && prefs.serviceSwitch
         binding.etInterval.text =
             Editable.Factory.getInstance().newEditable(prefs.interval.toString())
         binding.etDelay.text =
@@ -136,9 +126,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             binding.btnSave -> {
-                if (TextUtils.isEmpty(binding.etInterval.text) || TextUtils.isEmpty(binding.etDelay.text) || TextUtils.isEmpty(
-                        binding.etIgnore.text
-                    )
+                if (
+                    TextUtils.isEmpty(binding.etInterval.text) ||
+                    TextUtils.isEmpty(binding.etDelay.text) ||
+                    TextUtils.isEmpty(binding.etIgnore.text)
                 ) {
                     AlertDialog.Builder(this)
                         .setTitle(R.string.error)

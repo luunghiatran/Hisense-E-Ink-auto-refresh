@@ -54,7 +54,7 @@ class NotificationUtils {
 
     // 创建完全静默的通知渠道
     fun createNotificationChannel() {
-        val importance = NotificationManager.IMPORTANCE_MIN
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel =
             NotificationChannel(CHANNEL_ID, context.getString(R.string.notification_channel_name), importance).apply {
                 description = context.getString(R.string.notification_channel_description)
@@ -101,7 +101,7 @@ class NotificationUtils {
             setContentText(text) // 通知内容
             setSmallIcon(R.drawable.icon)
             setContentIntent(pendingIntent) // 设置点击行为
-            priority = NotificationCompat.PRIORITY_LOW
+            priority = NotificationCompat.PRIORITY_DEFAULT
             setCategory(Notification.CATEGORY_SERVICE)
             setOngoing(true) // 设置为持续通知（不可滑动消除）
             setAutoCancel(false) // 禁止自动取消
