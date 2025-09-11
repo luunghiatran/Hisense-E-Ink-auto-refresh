@@ -32,8 +32,9 @@
     <string name="toast_save">Saved</string>
     <string name="error_empty_config">Please complete all parameters</string>
     <string name="error_empty_format">Parameter format error</string>
-    <string name="notification_title">E-Ink Screen Monitoring Service Started</string>
+    <string name="notification_title">E-Ink Screen Monitoring Service</string>
     <string name="notification_text">Tap to configure parameters</string>
+    <string name="notification_text_stop">Monitoring paused</string>
     <string name="request_permission_usage_title">Usage Statistics Permission Required</string>
     <string name="request_permission_usage_message">This feature requires access to app usage statistics. Please enable the permission in Settings.</string>
     <string name="request_permission_overlay_title">Overlay Permission Required</string>

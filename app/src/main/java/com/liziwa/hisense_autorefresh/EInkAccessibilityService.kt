@@ -43,6 +43,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     private var ignoreApps = arrayOf<String>("com.android.systemui")
 
     private var addTouchView = false;
+    private var serviceConn = false;
     private lateinit var touchView: View
 
     private val notificationUtils = NotificationUtils.getInstance(this)
@@ -78,6 +79,12 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
             createTouchCapture()
         } else {
             deleteTouchCapture()
+        }
+        if (serviceConn) {
+            notificationUtils.showNotification(
+                if (serviceSwitch) getString(R.string.notification_text) else getString(R.string.notification_text_stop),
+                true
+            )
         }
     }
 
@@ -161,6 +168,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
         this.serviceInfo = info
         startForegroundNotification()
+        serviceConn = true
     }
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
@@ -246,7 +254,12 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
                 XLog.d("触发全局刷新")
             }
 
-            notificationUtils.showNotification(getString(R.string.notification_text_detailed, interval - clickCount), true)
+            notificationUtils.showNotification(
+                getString(
+                    R.string.notification_text_detailed,
+                    interval - clickCount
+                ), true
+            )
         }
         lastClickTime = currentTime
     }
@@ -255,7 +268,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         // 创建点击通知时打开的 Intent（通常是应用主界面）
         notificationUtils.createNotificationChannel()
         val notification = notificationUtils.showNotification(
-            getString(R.string.notification_text),
+            if (serviceSwitch) getString(R.string.notification_text) else getString(R.string.notification_text_stop),
             false
         )
         // 将服务设置为前台服务并显示通知
@@ -268,6 +281,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     override fun onUnbind(intent: Intent?): Boolean {
         XLog.d("无障碍服务断开连接")
+        serviceConn = false
         return super.onUnbind(intent)
     }
 

@@ -31,8 +31,9 @@
     <string name="toast_save">已保存</string>
     <string name="error_empty_config">请填写完整参数</string>
     <string name="error_empty_format">参数格式错误</string>
-    <string name="notification_title">墨水屏监控服务已启动</string>
+    <string name="notification_title">墨水屏监控服务</string>
     <string name="notification_text">点击配置参数</string>
+    <string name="notification_text_stop">已停止监控</string>
     <string name="request_permission_usage_title">需要使用情况统计权限</string>
     <string name="request_permission_usage_message">此功能需要访问应用使用情况统计信息，请前往设置中开启权限。</string>
     <string name="request_permission_overlay_title">需要使用悬浮窗权限</string>

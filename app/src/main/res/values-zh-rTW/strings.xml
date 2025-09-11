@@ -32,8 +32,9 @@
     <string name="toast_save">已儲存</string>
     <string name="error_empty_config">請填寫完整參數</string>
     <string name="error_empty_format">參數格式錯誤</string>
-    <string name="notification_title">墨水屏監控服務已啟動</string>
+    <string name="notification_title">墨水屏監控服務</string>
     <string name="notification_text">點擊設定參數</string>
+    <string name="notification_text_stop">已停止監控</string>
     <string name="request_permission_usage_title">需要使用情況統計權限</string>
     <string name="request_permission_usage_message">此功能需要存取應用程式使用情況統計資訊，請前往設定中開啟權限。</string>
     <string name="request_permission_overlay_title">需要使用懸浮窗權限</string>
