@@ -4,5 +4,4 @@
 
 
 
-<img src="./screenshot/screenshot_1.jpg" style="zoom:33%;" /> <img src="./screenshot/screenshot_2.jpg" style="zoom:33%;" />
-
+<img src="screenshot/screenshot_1.jpg" width="20%" /> <img src="screenshot/screenshot_2.jpg" width="20%" />
