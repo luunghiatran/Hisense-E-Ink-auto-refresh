@@ -19,6 +19,11 @@
     <string name="tv_monitor_key">响应按键操作</string>
     <string name="tv_monitor_touch">响应触摸操作</string>
     <string name="tv_monitor_global">监控所有应用</string>
+    <string name="tv_auto_detect_reading">自动识别阅读界面</string>
+    <string name="btn_reading_whitelist_hint">自动识别界面上文字数量，大于一定阈值后判断为阅读界面。一些付费阅读应用经过加密后无法正常读取界面，需要配置忽略自动识别。</string>
+    <string name="dialog_title_tip">提示</string>
+    <string name="tv_reading_whitelist">加密阅读应用白名单</string>
+    <string name="btn_reading_whitelist">配置忽略应用</string>
     <string name="btn_monitor_list">配置监控应用</string>
     <string name="loading">加载中…</string>
     <string name="btn_save">保存</string>

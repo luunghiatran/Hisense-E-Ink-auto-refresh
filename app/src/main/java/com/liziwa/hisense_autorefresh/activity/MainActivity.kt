@@ -23,6 +23,10 @@ import com.liziwa.hisense_autorefresh.util.Utils
 import com.liziwa.hisense_autorefresh.databinding.ActivityMainBinding
 import com.liziwa.hisense_autorefresh.util.NotificationUtils
 
+/**
+ * 主界面：展示/配置监控开关、阈值、监控范围与阅读白名单，并引导权限申请。
+ * 配置通过 SharedPreferences 持久化；保存时发送 ACTION_CONFIG_CHANGE 广播通知服务热更新。
+ */
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityMainBinding
@@ -49,7 +53,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.cbMonitorTouch.setOnClickListener { this.onClick(it) }
         binding.cbMonitorKey.setOnClickListener { this.onClick(it) }
         binding.cbMonitorGlobal.setOnClickListener { this.onClick(it) }
+        binding.cbAutoDetectReading.setOnClickListener { this.onClick(it) }
         binding.btnMonitorList.setOnClickListener { this.onClick(it) }
+        binding.btnReadingWhitelist.setOnClickListener { this.onClick(it) }
+        binding.ibReadingWhitelistHelp.setOnClickListener { this.onClick(it) }
         binding.btnSave.setOnClickListener { this.onClick(it) }
         binding.btnTest.setOnClickListener { this.onClick(it) }
         binding.btnExit.setOnClickListener { this.onClick(it) }
@@ -84,6 +91,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             Editable.Factory.getInstance().newEditable(prefs.ignoreTime.toString())
         binding.cbMonitorTouch.isChecked = prefs.monitorTouch
         binding.cbMonitorKey.isChecked = prefs.monitorKey
+        binding.cbAutoDetectReading.isChecked = prefs.autoDetectReading
         val monitorGlobal = binding.cbMonitorGlobal.tag as Boolean? ?: prefs.monitorGlobal
         binding.cbMonitorGlobal.isChecked =
             monitorGlobal || TextUtils.isEmpty(prefs.targetPackageName)
@@ -121,8 +129,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 binding.cbMonitorGlobal.tag = binding.cbMonitorGlobal.isChecked
             }
 
+            binding.cbAutoDetectReading -> {
+                // 仅记录勾选状态，保存时统一写入
+            }
+
             binding.btnMonitorList -> {
                 startActivity(Intent(this, AppsActivity::class.java))
+            }
+
+            binding.btnReadingWhitelist -> {
+                startActivity(Intent(this, AppsActivity::class.java).apply {
+                    putExtra(AppsActivity.EXTRA_MODE, AppsActivity.MODE_READING_WHITELIST)
+                })
+            }
+
+            binding.ibReadingWhitelistHelp -> {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.dialog_title_tip)
+                    .setMessage(R.string.btn_reading_whitelist_hint)
+                    .setPositiveButton(R.string.btn_confirm) { dialog, which ->
+                        dialog.dismiss()
+                    }.show()
             }
 
             binding.btnSave -> {
@@ -146,6 +173,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     prefs.monitorKey = binding.cbMonitorKey.isChecked
                     prefs.monitorTouch = binding.cbMonitorTouch.isChecked
                     prefs.monitorGlobal = binding.cbMonitorGlobal.isChecked
+                    prefs.autoDetectReading = binding.cbAutoDetectReading.isChecked
                     binding.cbMonitorGlobal.tag = null
                     prefs.hideBackgroundTask = binding.cbHideBackgroundTask.isChecked
                     sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
@@ -193,11 +221,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             ?.setExcludeFromRecents(hide)
     }
 
+    /**
+     * 进入前台时检查必要权限：忽略电池优化、悬浮窗。
+     * 每项权限若未授权且未处于“已提示过”状态，则弹引导；悬浮窗缺失会临时关闭服务开关。
+     * 用 prefs 中的权限标记位避免每次 onResume 重复弹窗。
+     */
     private fun requestRequiredPermissions() {
+        XLog.d("requestRequiredPermissions: 电池优化=${prefs.permissionIgnoringBatteryOptimizations}, 悬浮窗=${prefs.permissionOverlay}")
 
         // 检查忽略电池优化权限
         if (!PermissionHelper.hasIgnoringBatteryOptimizationsPermission(this)) {
             if (prefs.permissionIgnoringBatteryOptimizations != 0) {
+                XLog.d("requestRequiredPermissions: 申请忽略电池优化权限")
                 PermissionHelper.requestIgnoreBatteryOptimizationsPermission(this)
                 prefs.permissionIgnoringBatteryOptimizations = 0
                 return
@@ -209,9 +244,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         //申请悬浮窗权限
         if (!PermissionHelper.hasOverlayPermission(this)) {
             if (prefs.permissionOverlay != 0) {
+                XLog.d("requestRequiredPermissions: 申请悬浮窗权限，并临时关闭服务")
                 dialog = PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
                 prefs.permissionOverlay = 0
-                prefs.serviceSwitch = false;
+                prefs.serviceSwitch = false
                 sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
                 return
             }

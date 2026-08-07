@@ -20,6 +20,11 @@
     <string name="tv_monitor_key">Respond to button</string>
     <string name="tv_monitor_touch">Respond to touch</string>
     <string name="tv_monitor_global">Monitor all apps</string>
+    <string name="tv_auto_detect_reading">Auto-detect reading</string>
+    <string name="btn_reading_whitelist_hint">Counts on-screen text; over a threshold it is treated as reading. Some paid apps are encrypted and can\'t be read, so exclude them here.</string>
+    <string name="dialog_title_tip">Tip</string>
+    <string name="tv_reading_whitelist">Encrypted reader whitelist</string>
+    <string name="btn_reading_whitelist">Excluded apps</string>
     <string name="btn_monitor_list">Configure apps</string>
     <string name="loading">Loading…</string>
     <string name="btn_save">Save</string>

@@ -5,6 +5,11 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.liziwa.hisense_autorefresh.util.SingletonHolder
 
+/**
+ * 全局配置存储（SharedPreferences 单例）。
+ * 所有开关/阈值均持久化在 "ink_refresh_prefs" 文件中，供 MainActivity 写入、
+ * EInkAccessibilityService 通过 ACTION_CONFIG_CHANGE 广播读取。
+ */
 class AppPreferences private constructor(context: Context) {
 
     companion object : SingletonHolder<AppPreferences, Context>(::AppPreferences)
@@ -13,55 +18,78 @@ class AppPreferences private constructor(context: Context) {
         context.getSharedPreferences("ink_refresh_prefs", Context.MODE_PRIVATE)
 
 
+    /** 服务是否曾开启（用于开机自启判断） */
     var serviceState: Boolean
         get() = prefs.getBoolean("service_state", false)
         set(value) = prefs.edit { putBoolean("service_state", value).apply() }
 
+    /** 手动选择的监控应用包名列表，逗号分隔；为空表示仅依赖 monitorGlobal */
     var targetPackageName: String?
         get() = prefs.getString("target_package_name", "")
         set(value) = prefs.edit { putString("target_package_name", value) }
 
 
+    /** 主开关：是否真正开始监听与刷新 */
     var serviceSwitch: Boolean
         get() = prefs.getBoolean("service_switch", false)
         set(value) = prefs.edit { putBoolean("service_switch", value).apply() }
 
+    /** 触发刷新的操作次数阈值（累计点击/按键达到该值则全屏刷新） */
     var interval: Int
         get() = prefs.getInt("interval", 10)
         set(value) = prefs.edit { putInt("interval", value).apply() }
 
+    /** 达到阈值后延迟刷新时间（毫秒） */
     var delayTime: Int
         get() = prefs.getInt("delay_time", 500)
         set(value) = prefs.edit { putInt("delay_time", value).apply() }
 
+    /** 两次操作的最小间隔（毫秒），小于该间隔视为连点被过滤 */
     var ignoreTime: Int
         get() = prefs.getInt("ignore_time", 2000)
         set(value) = prefs.edit { putInt("ignore_time", value).apply() }
 
+    /** 是否监听触摸操作 */
     var monitorTouch: Boolean
         get() = prefs.getBoolean("monitor_touch", true)
         set(value) = prefs.edit { putBoolean("monitor_touch", value).apply() }
 
+    /** 是否监听按键操作 */
     var monitorKey: Boolean
         get() = prefs.getBoolean("monitor_key", true)
         set(value) = prefs.edit { putBoolean("monitor_key", value).apply() }
 
+    /** 是否监控所有应用（true 时忽略 targetPackageName，对所有前台应用生效） */
     var monitorGlobal: Boolean
         get() = prefs.getBoolean("monitor_global", true)
         set(value) = prefs.edit { putBoolean("monitor_global", value).apply() }
 
+    /** 是否开启“自动识别阅读界面”（读屏统计文字 > 阈值才计次，否则跳过） */
+    var autoDetectReading: Boolean
+        get() = prefs.getBoolean("auto_detect_reading", true)
+        set(value) = prefs.edit { putBoolean("auto_detect_reading", value).apply() }
+
+    /** 阅读白名单：逗号分隔的关键字，包名命中则跳过读屏、直接视为阅读界面（加密小说 App 用） */
+    var readingWhitelist: String?
+        get() = prefs.getString("reading_whitelist", "qidian")
+        set(value) = prefs.edit { putString("reading_whitelist", value) }
+
+    /** 忽略电池优化权限状态：1=已授权, 0=未授权/待申请, -1=初始未判断 */
     var permissionIgnoringBatteryOptimizations: Int
         get() = prefs.getInt("permission_ignoring_battery_optimizations", -1)
         set(value) = prefs.edit { putInt("permission_ignoring_battery_optimizations", value).apply() }
 
+    /** 悬浮窗权限状态：1=已授权, 0=未授权/待申请, -1=初始未判断 */
     var permissionOverlay: Int
         get() = prefs.getInt("permission_overlay", -1)
         set(value) = prefs.edit { putInt("permission_overlay", value).apply() }
 
+    /** 使用情况统计权限状态：1=已授权, 0=未授权/待申请, -1=初始未判断 */
     var permissionUsageStats: Int
         get() = prefs.getInt("permission_usage_stats", -1)
         set(value) = prefs.edit { putInt("permission_usage_stats", value).apply() }
 
+    /** 是否在最近任务列表中隐藏本应用 */
     var hideBackgroundTask: Boolean
         get() = prefs.getBoolean("hide_background_task", true)
         set(value) = prefs.edit { putBoolean("hide_background_task", value).apply() }

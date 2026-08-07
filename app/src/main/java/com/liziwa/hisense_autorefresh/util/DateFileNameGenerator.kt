@@ -6,6 +6,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+/**
+ * XLog 文件名生成器：按“本地日期”生成日志文件名（每天一个 .txt，便于按天归档）。
+ */
 class DateFileNameGenerator : FileNameGenerator {
 
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)

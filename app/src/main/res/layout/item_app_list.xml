@@ -31,6 +31,8 @@
             android:layout_height="wrap_content"
             android:checked="@{item.checked}"
             android:clickable="false"
+            android:stateListAnimator="@null"
+            android:foreground="@null"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

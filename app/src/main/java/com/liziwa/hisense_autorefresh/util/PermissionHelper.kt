@@ -16,14 +16,17 @@ import androidx.core.net.toUri
 import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.R
 
+/**
+ * 运行时权限辅助类：悬浮窗、忽略电池优化、使用情况统计三类权限的检测与申请引导。
+ */
 object PermissionHelper {
 
-    // 检查悬浮窗权限是否已授予
+    /** 检查悬浮窗（SYSTEM_ALERT_WINDOW）权限是否已授予 */
     fun hasOverlayPermission(context: Context): Boolean {
         return Settings.canDrawOverlays(context)
     }
 
-    // 请求悬浮窗权限（兼容所有版本）
+    /** 请求悬浮窗权限：弹引导对话框，按系统版本跳转设置（Android 11+ 带返回标志） */
     fun requestOverlayPermission(activity: Activity, requestCode: Int): AlertDialog {
         XLog.d("requestOverlayPermission: ")
         // 跳转前提示用户
@@ -65,6 +68,7 @@ object PermissionHelper {
         activity.startActivityForResult(intent, requestCode)
     }
 
+    /** 跳转系统设置申请忽略电池优化权限 */
     fun requestIgnoreBatteryOptimizationsPermission(context: Context) {
         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
         intent.data = "package:${context.packageName}".toUri()

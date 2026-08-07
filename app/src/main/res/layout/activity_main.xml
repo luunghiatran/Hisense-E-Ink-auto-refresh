@@ -197,12 +197,50 @@
                 app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
 
             <TextView
+                android:id="@+id/tv_auto_detect_reading"
+                style="@style/defTextStyle"
+                android:layout_marginTop="@dimen/space"
+                android:text="@string/tv_auto_detect_reading"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_monitor_global" />
+
+            <ImageButton
+                android:id="@+id/ib_reading_whitelist_help"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@null"
+                android:contentDescription="@string/btn_reading_whitelist_hint"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/help"
+                app:layout_constraintBottom_toBottomOf="@id/tv_auto_detect_reading"
+                app:layout_constraintLeft_toRightOf="@id/tv_auto_detect_reading"
+                app:layout_constraintTop_toTopOf="@id/tv_auto_detect_reading" />
+
+            <CheckBox
+                android:id="@+id/cb_auto_detect_reading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/tv_auto_detect_reading"
+                app:layout_constraintLeft_toRightOf="@id/ib_reading_whitelist_help"
+                app:layout_constraintTop_toTopOf="@id/tv_auto_detect_reading" />
+
+
+            <Button
+                android:id="@+id/btn_reading_whitelist"
+                style="@style/defButtonStyle"
+                android:text="@string/btn_reading_whitelist"
+                app:layout_constraintBottom_toBottomOf="@id/tv_auto_detect_reading"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tv_auto_detect_reading" />
+
+            <TextView
                 android:id="@+id/tv_hide_background_task"
                 style="@style/defTextStyle"
                 android:layout_marginTop="@dimen/space"
                 android:text="@string/tv_hide_background_task"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_monitor_global" />
+                app:layout_constraintTop_toBottomOf="@id/tv_auto_detect_reading" />
 
             <CheckBox
                 android:id="@+id/cb_hide_background_task"
@@ -228,18 +266,18 @@
             style="@style/defButtonStyle"
             android:layout_width="0dp"
             android:layout_marginLeft="@dimen/area_margin"
-            android:layout_marginTop="@dimen/space"
-            android:layout_marginRight="@dimen/area_margin"
+            android:layout_marginRight="5dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/btn_test"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@id/btn_exit"
-            app:layout_constraintTop_toBottomOf="@id/cl_config" />
+            app:layout_constraintRight_toLeftOf="@id/btn_exit" />
 
         <Button
             android:id="@+id/btn_exit"
             style="@style/defButtonStyle"
             android:layout_width="0dp"
-            android:layout_marginLeft="@dimen/area_margin"
+            android:layout_marginLeft="5dp"
             android:layout_marginRight="@dimen/area_margin"
             android:text="@string/btn_exit"
             app:layout_constraintBottom_toBottomOf="@id/btn_test"

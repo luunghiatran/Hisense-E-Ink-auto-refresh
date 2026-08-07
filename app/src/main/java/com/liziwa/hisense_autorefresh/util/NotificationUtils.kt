@@ -10,6 +10,11 @@ import androidx.core.app.NotificationCompat
 import com.liziwa.hisense_autorefresh.R
 import com.liziwa.hisense_autorefresh.activity.MainActivity
 
+/**
+ * 前台服务通知管理：
+ * - 常驻“已监控”通知（CHANNEL_ID，静默、不可消除）
+ * - 服务异常时弹出“错误”通知（CHANNEL_ERROR_ID，震动提醒）
+ */
 class NotificationUtils {
 
     companion object : SingletonHolder<NotificationUtils, Context>(::NotificationUtils)
@@ -40,7 +45,7 @@ class NotificationUtils {
     private val CHANNEL_ERROR_ID = "service_error_channel"
     private val CHANNEL_ID = "service_channel"
 
-    // 创建通知渠道
+    /** 错误通知渠道：高优先级 + 震动，用于服务启动失败/权限异常时提醒用户 */
     fun createErrorNotificationChannel() {
         val importance = NotificationManager.IMPORTANCE_HIGH
         val channel =
@@ -52,7 +57,7 @@ class NotificationUtils {
         manager.createNotificationChannel(channel)
     }
 
-    // 创建完全静默的通知渠道
+    /** 正常服务通知渠道：完全静默（无震动/灯/声），用于常驻“已监控”通知 */
     fun createNotificationChannel() {
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel =
@@ -67,7 +72,7 @@ class NotificationUtils {
         manager.createNotificationChannel(channel)
     }
 
-    // 显示服务失败通知
+    /** 弹出服务失败/异常通知（高优先级、震动、点击跳转回应用） */
     fun showServiceFailedNotification() {
         // 创建通知
         val notification = NotificationCompat.Builder(context, CHANNEL_ERROR_ID)
@@ -86,6 +91,7 @@ class NotificationUtils {
         showErrorNotification = true
     }
 
+    /** 移除并删除错误通知渠道（进入前台/恢复正常时调用） */
     fun removeErrorNotification() {
         if (showErrorNotification) {
             manager.cancel(NOTIFICATION_ERROR_ID)
@@ -94,6 +100,11 @@ class NotificationUtils {
         }
     }
 
+    /**
+     * 构建并返回常驻“已监控”通知。
+     * @param text    通知内容（通常为当前计数/状态）
+     * @param isUpdate 仅当为 true 时才 notify 更新；返回的通知用于 startForeground 首次展示
+     */
     fun showNotification(text: String, isUpdate: Boolean): Notification {
         // 构建通知
         val notification = NotificationCompat.Builder(context, CHANNEL_ID).apply {

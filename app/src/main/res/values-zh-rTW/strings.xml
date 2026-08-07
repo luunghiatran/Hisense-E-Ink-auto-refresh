@@ -20,6 +20,11 @@
     <string name="tv_monitor_key">響應按鍵操作</string>
     <string name="tv_monitor_touch">響應觸控操作</string>
     <string name="tv_monitor_global">監控所有應用程式</string>
+    <string name="tv_auto_detect_reading">自動辨識閱讀介面</string>
+    <string name="btn_reading_whitelist_hint">統計介面文字，超過閾值即視為閱讀。部分付費應用加密後無法讀取，請在此忽略自動辨識。</string>
+    <string name="dialog_title_tip">提示</string>
+    <string name="tv_reading_whitelist">加密閱讀應用白名單</string>
+    <string name="btn_reading_whitelist">設定忽略應用</string>
     <string name="btn_monitor_list">設定監控應用</string>
     <string name="loading">載入中…</string>
     <string name="btn_save">儲存</string>
