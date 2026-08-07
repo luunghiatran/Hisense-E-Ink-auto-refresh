@@ -119,6 +119,9 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         super.onCreate()
         XLog.d("无障碍服务创建")
         val filter = IntentFilter(ACTION_CONFIG_CHANGE)
+        // 监听屏幕息屏/亮屏，用于锁屏时重置计数
+        filter.addAction(Intent.ACTION_SCREEN_OFF)
+        filter.addAction(Intent.ACTION_SCREEN_ON)
         prefs = AppPreferences.getInstance(applicationContext)
         ContextCompat.registerReceiver(
             this,
@@ -131,8 +134,19 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_CONFIG_CHANGE) {
-                updateConfig()
+            when (intent?.action) {
+                ACTION_CONFIG_CHANGE -> updateConfig()
+                // 进入锁屏/息屏：重置操作计数，避免锁屏前的操作遗留
+                Intent.ACTION_SCREEN_OFF -> {
+                    XLog.d("屏幕息屏（锁屏），重置操作计数")
+                    clickCount = 0
+                    setReadingState(false)
+                }
+                // 亮屏解锁：恢复默认阅读态（自动识别开启时由读屏重新判定）
+                Intent.ACTION_SCREEN_ON -> {
+                    XLog.d("屏幕亮屏（解锁），重置阅读态等待重新判定")
+                    setReadingState(false)
+                }
             }
         }
     }

@@ -3,6 +3,7 @@
     <string name="app_name">Hisense E-Ink Auto Refresh</string>
     <string name="title_activity_main">E-Ink Screen Refresh</string>
     <string name="title_activity_apps">Monitored Apps List</string>
+    <string name="title_activity_apps_whitelist">Ignored Apps List</string>
     <string name="accessibility_service_description">The accessibility service is used to obtain screen and button operation counts, and refresh the E-Ink screen based on intervals.</string>
     <string name="tv_service_status">Service Status</string>
     <string name="tv_accessibility_status">Service Status:</string>

@@ -62,6 +62,8 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
         job = Job()
         prefs = AppPreferences.getInstance(applicationContext)
         mode = intent?.getStringExtra(EXTRA_MODE) ?: MODE_MONITOR
+        // 按模式设置标题：监控模式显示“监控应用列表”，忽略应用(白名单)模式显示“忽略应用列表”
+        setTitle(if (mode == MODE_READING_WHITELIST) R.string.title_activity_apps_whitelist else R.string.title_activity_apps)
         XLog.d("AppsActivity: onCreate mode=$mode")
 
         binding.btnSave.setOnClickListener { this.onClick(it) }
