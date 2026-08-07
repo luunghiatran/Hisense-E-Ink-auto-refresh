@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="area_text_size">12sp</dimen>
+    <dimen name="area_text_size">13sp</dimen>
     <dimen name="def_text_size">15sp</dimen>
     <dimen name="def_btn_size">14sp</dimen>
     <dimen name="btn_bg_radius">10dp</dimen>
