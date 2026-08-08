@@ -4,6 +4,8 @@
     <string name="title_activity_main">墨水屏刷新</string>
     <string name="title_activity_apps">監控應用程式列表</string>
     <string name="title_activity_apps_whitelist">忽略應用程式列表</string>
+    <string name="toast_debug_on">調試模式已開啟</string>
+    <string name="toast_debug_off">調試模式已關閉</string>
     <string name="accessibility_service_description">無障礙服務用於獲取屏幕及按鍵操作次數，並根據間隔刷新墨水屏</string>
     <string name="tv_service_status">服務狀態</string>
     <string name="tv_accessibility_status">無障礙服務狀態：</string>

@@ -47,6 +47,15 @@ class AppPreferences private constructor(context: Context) {
         get() = prefs.getInt("period_refresh", 300)
         set(value) = prefs.edit { putInt("period_refresh", value).apply() }
 
+    /**
+     * 调试模式开关，默认关闭。
+     * 开启后：XLog 输出线程信息/调用栈/边框，并将日志写入文件；
+     * 关闭后：仅输出 Logcat，不写文件。
+     */
+    var debugMode: Boolean
+        get() = prefs.getBoolean("debug_mode", false)
+        set(value) = prefs.edit { putBoolean("debug_mode", value).apply() }
+
     /** 达到阈值后延迟刷新时间（毫秒） */
     var delayTime: Int
         get() = prefs.getInt("delay_time", 500)

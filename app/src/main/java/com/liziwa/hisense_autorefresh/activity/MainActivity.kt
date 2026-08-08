@@ -17,6 +17,7 @@ import androidx.databinding.DataBindingUtil
 import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.AppPreferences
 import com.liziwa.hisense_autorefresh.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.MyApp
 import com.liziwa.hisense_autorefresh.util.PermissionHelper
 import com.liziwa.hisense_autorefresh.R
 import com.liziwa.hisense_autorefresh.util.Utils
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: AppPreferences
     private val PERMISSION_REQUEST_OVERLAY = 1001
+    private var titleClickCount = 0 // 主标题连点计数，达到阈值切换调试模式
 
     private var dialog: AlertDialog? = null
 
@@ -61,6 +63,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.btnTest.setOnClickListener { this.onClick(it) }
         binding.btnExit.setOnClickListener { this.onClick(it) }
         NotificationUtils.getInstance(this).removeErrorNotification()
+
+        // 主标题连点 10 次切换调试模式（默认关闭）：开启后 XLog 写文件并打开详细日志
+        binding.tvCustomTitle.setOnClickListener {
+            titleClickCount++
+            if (titleClickCount >= 10) {
+                titleClickCount = 0
+                val newMode = !prefs.debugMode
+                prefs.debugMode = newMode
+                MyApp.reinitXLog(applicationContext)
+                XLog.i("MainActivity: 调试模式切换为 $newMode")
+                Toast.makeText(
+                    this,
+                    if (newMode) getString(R.string.toast_debug_on) else getString(R.string.toast_debug_off),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     fun updateUI() {

@@ -8,6 +8,20 @@
         android:layout_height="match_parent"
         tools:context=".activity.AppsActivity">
 
+        <!-- 自定义轻量标题栏（替代原生 ActionBar） -->
+        <LinearLayout
+            android:id="@+id/cl_custom_title"
+            style="@style/CustomTitleBarStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_title"
+                style="@style/CustomTitleTextStyle"
+                android:text="@string/title_activity_apps" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/btn_save"
             style="@style/defButtonStyle"
@@ -42,7 +56,7 @@
             app:layout_constraintBottom_toTopOf="@id/btn_save"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/cl_custom_title" />
 
         <TextView
             android:id="@+id/tv_loading"
