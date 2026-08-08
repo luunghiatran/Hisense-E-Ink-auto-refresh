@@ -58,6 +58,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     private var periodRefresh = 0 // 周期刷新间隔（秒），0 表示关闭
     private var lastRefreshTime = 0L // 上次真正刷新时间（elapsedRealtime），用于周期刷新去重
     private var isScreenLocked = false // 是否处于锁屏/息屏状态
+    private var nonReadingOpCount = 0 // 非阅读界面累计操作次数，用于触发重新读屏识别
 
     private var ignoreApps = arrayOf<String>("com.android.systemui")
 
@@ -74,7 +75,9 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         private const val MSG_DETECT_READING = 102
         private const val MSG_PERIODIC_REFRESH = 103
         private const val DETECT_DELAY_MS = 1000L
-        private const val READ_TEXT_THRESHOLD = 180 // 判定阅读界面的屏幕文字阈值
+        private const val READ_RATIO_THRESHOLD = 10 // 文字数/节点数 阈值，过滤文字多但节点也多的非阅读界面
+        private const val READ_TEXT_THRESHOLD = 150 // 判定阅读界面的屏幕文字阈值
+        private const val NON_READING_REDETECT_COUNT = 5 // 非阅读界面累计操作达该次数后重新读屏识别
         private const val PERIOD_REFRESH_DUPLICATE_MS = 30000L // 距上次刷新低于该值时跳过周期刷新
     }
 
@@ -343,13 +346,23 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     }
 
     /**
-     * 延迟读取屏幕内容，统计文字数量判定是否为阅读界面
+     * 延迟读取屏幕内容，统计文字数量与节点数，综合判定是否为阅读界面。
+     * 阅读界面特征：文字量大（>阈值）且节点稀疏（文字/节点比值高），
+     * 以此过滤「文字多但节点也多」的非阅读界面（如密集列表、菜单）。
      */
     private fun detectReadingScreen() {
         if (!serviceSwitch || !isTarget) return
-        val textCount = countScreenText()
-        val reading = textCount > READ_TEXT_THRESHOLD
-        XLog.d("读屏识别: 文字数量=$textCount, 阈值=$READ_TEXT_THRESHOLD, 判定阅读界面=$reading")
+        val result = countScreenText()
+        val textEnough = result.textCount > READ_TEXT_THRESHOLD
+        // 文字与节点比值：阅读界面文字密集、节点少，比值应明显高于普通界面
+        val ratioEnough = result.nodeCount > 0 && result.textCount / result.nodeCount > READ_RATIO_THRESHOLD
+        val reading = textEnough && ratioEnough
+        XLog.d(
+            "读屏识别: 文字数量=${result.textCount}, 节点数=${result.nodeCount}, " +
+                    "比值=${if (result.nodeCount > 0) result.textCount / result.nodeCount else 0}, " +
+                    "阈值(文字)=$READ_TEXT_THRESHOLD, 阈值(比值)=$READ_RATIO_THRESHOLD, " +
+                    "判定阅读界面=$reading"
+        )
         setReadingState(reading)
         if (!reading) {
             clickCount = 0
@@ -357,17 +370,20 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         }
     }
 
+    /** 屏幕文字统计结果：可见正文总字数 + 遍历到的节点数 */
+    private data class ScreenTextResult(val textCount: Int, val nodeCount: Int)
+
     /**
-     * 遍历当前窗口节点，统计可见正文文本的字数。
+     * 遍历当前窗口节点，统计可见正文文本的字数及节点总数。
      * 每个节点只取一次文本（优先 text，避免与 contentDescription 重复），
      * 并跳过其子节点已包含文本的非叶子节点，防止父/子嵌套重复累加。
      * 仅统计「自身及所有祖先均对用户可见」的文本，剔除被父容器隐藏的节点。
      */
-    private fun countScreenText(): Int {
+    private fun countScreenText(): ScreenTextResult {
         val root = rootInActiveWindow
         if (root == null) {
             XLog.e("统计屏幕文字失败: rootInActiveWindow 为 null（未开启 canRetrieveWindowContent 或无活动窗口）")
-            return 0
+            return ScreenTextResult(0, 0)
         }
         var total = 0
         var nodeCount = 0
@@ -409,7 +425,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         } catch (e: Exception) {
             XLog.e("统计屏幕文字时出错", e)
         }
-        return total
+        return ScreenTextResult(total, nodeCount)
     }
 
     /**
@@ -433,6 +449,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
             XLog.d("阅读界面状态切换: $isReading -> $reading, 重置计数")
             isReading = reading
             clickCount = 0
+            nonReadingOpCount = 0 // 界面状态变化，重置非阅读重识别计数，进入新一轮
         }
     }
 
@@ -479,9 +496,18 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
     fun userOperating() {
         if (packageName.equals(currentPackage)) return
-        // 开启自动识别且当前不在阅读界面时，跳过统计
+        // 开启自动识别且当前不在阅读界面时，跳过刷新统计，但累计操作次数：
+        // 同一 activity 内多个 fragment 切换时 TYPE_WINDOW_STATE_CHANGED 不会触发，
+        // 故累计达到一定次数后重新读屏识别，避免漏判真正的阅读界面。
         if (autoDetectReading && !isReading) {
-            XLog.d("userOperating: 非阅读界面，跳过统计")
+            nonReadingOpCount++
+            XLog.d("userOperating: 非阅读界面，跳过统计（非阅读操作计数 nonReadingOpCount=$nonReadingOpCount）")
+            if (nonReadingOpCount >= NON_READING_REDETECT_COUNT) { // 达到阈值触发重新识别
+                nonReadingOpCount = 0
+                XLog.d("非阅读界面操作达 $NON_READING_REDETECT_COUNT 次，重新读屏识别界面")
+                myHandler.removeMessages(MSG_DETECT_READING)
+                myHandler.sendEmptyMessageDelayed(MSG_DETECT_READING, DETECT_DELAY_MS)
+            }
             return
         }
         XLog.d("userOperating: ")
