@@ -39,6 +39,14 @@ class AppPreferences private constructor(context: Context) {
         get() = prefs.getInt("interval", 10)
         set(value) = prefs.edit { putInt("interval", value).apply() }
 
+    /**
+     * 周期刷新间隔（秒）。0 表示关闭周期刷新；默认 300（5 分钟）。
+     * 仅在非锁屏状态下计时，锁屏停止、解锁重置。
+     */
+    var periodRefresh: Int
+        get() = prefs.getInt("period_refresh", 300)
+        set(value) = prefs.edit { putInt("period_refresh", value).apply() }
+
     /** 达到阈值后延迟刷新时间（毫秒） */
     var delayTime: Int
         get() = prefs.getInt("delay_time", 500)

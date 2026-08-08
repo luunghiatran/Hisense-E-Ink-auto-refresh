@@ -17,6 +17,7 @@
     <string name="tv_interval">Refresh interval (touch/button)</string>
     <string name="tv_delay">Delay refresh (milliseconds)</string>
     <string name="tv_ignore">Ignore time (milliseconds)</string>
+    <string name="tv_period_refresh">Periodic refresh (sec), 0 off</string>
     <string name="tv_config_title">Parameter Configuration</string>
     <string name="tv_monitor_key">Respond to button</string>
     <string name="tv_monitor_touch">Respond to touch</string>

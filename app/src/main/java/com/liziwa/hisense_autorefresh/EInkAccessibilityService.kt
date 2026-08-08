@@ -55,6 +55,10 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     private var serviceSwitch = false
     private var choiceApps: List<String> = mutableListOf()
 
+    private var periodRefresh = 0 // 周期刷新间隔（秒），0 表示关闭
+    private var lastRefreshTime = 0L // 上次真正刷新时间（elapsedRealtime），用于周期刷新去重
+    private var isScreenLocked = false // 是否处于锁屏/息屏状态
+
     private var ignoreApps = arrayOf<String>("com.android.systemui")
 
     private var addTouchView = false;
@@ -68,8 +72,10 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
 
         private const val MSG_REFRESH_DISPLAY = 101
         private const val MSG_DETECT_READING = 102
+        private const val MSG_PERIODIC_REFRESH = 103
         private const val DETECT_DELAY_MS = 1000L
         private const val READ_TEXT_THRESHOLD = 180 // 判定阅读界面的屏幕文字阈值
+        private const val PERIOD_REFRESH_DUPLICATE_MS = 30000L // 距上次刷新低于该值时跳过周期刷新
     }
 
     fun updateConfig() {
@@ -85,6 +91,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
             prefs.readingWhitelist?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: emptyList()
         choiceApps = prefs.targetPackageName?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+        periodRefresh = prefs.periodRefresh
         clickCount = 0
         isTarget = monitorGlobal || choiceApps.isEmpty()
         isReading = !autoDetectReading
@@ -100,6 +107,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
                     "autoDetectReading=$autoDetectReading, " +
                     "readingWhitelist=${prefs.readingWhitelist}, " +
                     "choiceApps=${prefs.targetPackageName}, " +
+                    "periodRefresh=$periodRefresh, " +
                     "isReading(初始)=$isReading"
         )
         if (prefs.permissionOverlay == 1 && serviceSwitch) {
@@ -113,6 +121,8 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
                 true
             )
         }
+        // 配置变更后重新安排周期刷新（会依据 serviceSwitch / periodRefresh / 锁屏状态决定是否启动）
+        reschedulePeriodicRefresh()
     }
 
     override fun onCreate() {
@@ -136,16 +146,20 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_CONFIG_CHANGE -> updateConfig()
-                // 进入锁屏/息屏：重置操作计数，避免锁屏前的操作遗留
+                // 进入锁屏/息屏：停止周期刷新计时、重置操作计数，避免锁屏期间的残留
                 Intent.ACTION_SCREEN_OFF -> {
-                    XLog.d("屏幕息屏（锁屏），重置操作计数")
+                    XLog.d("屏幕息屏（锁屏），停止周期刷新并重置操作计数")
+                    isScreenLocked = true
+                    stopPeriodicRefresh()
                     clickCount = 0
                     setReadingState(false)
                 }
-                // 亮屏解锁：恢复默认阅读态（自动识别开启时由读屏重新判定）
+                // 亮屏解锁：重置锁屏态并重新安排周期刷新计时
                 Intent.ACTION_SCREEN_ON -> {
-                    XLog.d("屏幕亮屏（解锁），重置阅读态等待重新判定")
+                    XLog.d("屏幕亮屏（解锁），重置阅读态并重启周期刷新计时")
+                    isScreenLocked = false
                     setReadingState(false)
+                    reschedulePeriodicRefresh()
                 }
             }
         }
@@ -158,6 +172,8 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
                 Utils.refreshScreen(applicationContext)
             } else if (msg.what == MSG_DETECT_READING) {
                 detectReadingScreen()
+            } else if (msg.what == MSG_PERIODIC_REFRESH) {
+                doPeriodicRefresh()
             }
         }
     }
@@ -420,6 +436,47 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         }
     }
 
+    /**
+     * 重新安排周期刷新计时：
+     * - 服务已开启、未锁屏、且周期间隔 > 0 时启动循环计时；
+     * - 否则清除周期消息（如关闭周期刷新 / 锁屏 / 服务停用）。
+     */
+    private fun reschedulePeriodicRefresh() {
+        stopPeriodicRefresh()
+        if (serviceSwitch && !isScreenLocked && periodRefresh > 0) {
+            XLog.d("启动周期刷新: 间隔=${periodRefresh}s")
+            myHandler.sendEmptyMessageDelayed(MSG_PERIODIC_REFRESH, periodRefresh * 1000L)
+        } else {
+            XLog.d("未启动周期刷新: serviceSwitch=$serviceSwitch, isScreenLocked=$isScreenLocked, periodRefresh=$periodRefresh")
+        }
+    }
+
+    /** 停止周期刷新计时（移除待执行的周期消息） */
+    private fun stopPeriodicRefresh() {
+        myHandler.removeMessages(MSG_PERIODIC_REFRESH)
+    }
+
+    /**
+     * 执行一次周期刷新：
+     * - 若距上次真正刷新不足 30s 则跳过（避免与操作触发刷新重复）；
+     * - 刷新成功后记录刷新时间、清零操作计数，并重新安排下一轮周期。
+     */
+    private fun doPeriodicRefresh() {
+        // 重新安排下一轮（无论本次是否刷新，都保持周期循环）
+        myHandler.sendEmptyMessageDelayed(MSG_PERIODIC_REFRESH, periodRefresh * 1000L)
+
+        if (!serviceSwitch || isScreenLocked) return
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastRefreshTime < PERIOD_REFRESH_DUPLICATE_MS) {
+            XLog.d("周期刷新跳过: 距上次刷新 ${(now - lastRefreshTime)}ms < ${PERIOD_REFRESH_DUPLICATE_MS}ms")
+            return
+        }
+        XLog.d("周期刷新触发，执行全局刷新")
+        Utils.refreshScreen(applicationContext)
+        lastRefreshTime = SystemClock.elapsedRealtime()
+        clickCount = 0 // 周期刷新成功后清零操作统计计数
+    }
+
     fun userOperating() {
         if (packageName.equals(currentPackage)) return
         // 开启自动识别且当前不在阅读界面时，跳过统计
@@ -441,7 +498,9 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
                 // 触发全局刷新
                 myHandler.removeMessages(MSG_REFRESH_DISPLAY)
                 myHandler.sendEmptyMessageDelayed(MSG_REFRESH_DISPLAY, delayTime.toLong())
-                clickCount = 0 // 重置计数
+                // 记录刷新时间，供周期刷新 30s 去重判断；并清零计数
+                lastRefreshTime = SystemClock.elapsedRealtime()
+                clickCount = 0
                 XLog.d("触发全局刷新")
             }
 
@@ -473,14 +532,14 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     override fun onUnbind(intent: Intent?): Boolean {
         XLog.d("无障碍服务断开连接")
         serviceConn = false
-        myHandler.removeMessages(MSG_DETECT_READING)
+        myHandler.removeCallbacksAndMessages(null)
         return super.onUnbind(intent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         XLog.d("无障碍服务被销毁")
-        myHandler.removeMessages(MSG_DETECT_READING)
+        myHandler.removeCallbacksAndMessages(null)
         deleteTouchCapture()
         unregisterReceiver(myReceiver)
     }

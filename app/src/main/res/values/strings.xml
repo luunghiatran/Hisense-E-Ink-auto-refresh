@@ -16,6 +16,7 @@
     <string name="tv_interval">触发屏幕刷新间隔次数（触摸/按键）</string>
     <string name="tv_delay">触发屏幕刷新时延迟（毫秒）</string>
     <string name="tv_ignore">过滤时间段内连续操作（毫秒）</string>
+    <string name="tv_period_refresh">周期刷新（秒，0关闭）</string>
     <string name="tv_config_title">参数配置</string>
     <string name="tv_monitor_key">响应按键操作</string>
     <string name="tv_monitor_touch">响应触摸操作</string>

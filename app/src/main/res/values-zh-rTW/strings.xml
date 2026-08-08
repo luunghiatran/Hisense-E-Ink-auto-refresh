@@ -17,6 +17,7 @@
     <string name="tv_interval">觸發螢幕刷新間隔次數（觸控/按鍵）</string>
     <string name="tv_delay">觸發螢幕刷新時延遲（毫秒）</string>
     <string name="tv_ignore">過濾時間段內連續操作（毫秒）</string>
+    <string name="tv_period_refresh">週期刷新（秒）0關閉</string>
     <string name="tv_config_title">參數設定</string>
     <string name="tv_monitor_key">響應按鍵操作</string>
     <string name="tv_monitor_touch">響應觸控操作</string>

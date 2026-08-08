@@ -8,5 +8,5 @@
     <dimen name="area_padding">10dp</dimen>
     <dimen name="area_padding_bottom">15dp</dimen>
     <dimen name="area_margin">10dp</dimen>
-    <dimen name="space">25dp</dimen>
+    <dimen name="space">20dp</dimen>
 </resources>

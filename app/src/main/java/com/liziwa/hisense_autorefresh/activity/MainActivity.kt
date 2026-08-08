@@ -89,6 +89,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             Editable.Factory.getInstance().newEditable(prefs.delayTime.toString())
         binding.etIgnore.text =
             Editable.Factory.getInstance().newEditable(prefs.ignoreTime.toString())
+        binding.etPeriod.text =
+            Editable.Factory.getInstance().newEditable(prefs.periodRefresh.toString())
         binding.cbMonitorTouch.isChecked = prefs.monitorTouch
         binding.cbMonitorKey.isChecked = prefs.monitorKey
         binding.cbAutoDetectReading.isChecked = prefs.autoDetectReading
@@ -156,7 +158,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 if (
                     TextUtils.isEmpty(binding.etInterval.text) ||
                     TextUtils.isEmpty(binding.etDelay.text) ||
-                    TextUtils.isEmpty(binding.etIgnore.text)
+                    TextUtils.isEmpty(binding.etIgnore.text) ||
+                    TextUtils.isEmpty(binding.etPeriod.text)
                 ) {
                     AlertDialog.Builder(this)
                         .setTitle(R.string.error)
@@ -170,6 +173,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     prefs.interval = binding.etInterval.text.toString().toInt()
                     prefs.delayTime = binding.etDelay.text.toString().toInt()
                     prefs.ignoreTime = binding.etIgnore.text.toString().toInt()
+                    prefs.periodRefresh = binding.etPeriod.text.toString().toInt()
                     prefs.monitorKey = binding.cbMonitorKey.isChecked
                     prefs.monitorTouch = binding.cbMonitorTouch.isChecked
                     prefs.monitorGlobal = binding.cbMonitorGlobal.isChecked
