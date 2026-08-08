@@ -110,12 +110,36 @@
             app:layout_constraintTop_toBottomOf="@id/tv_config_title">
 
             <TextView
+                android:id="@+id/tv_monitor_global"
+                style="@style/defTextStyle"
+                android:layout_marginTop="@dimen/space"
+                android:text="@string/tv_monitor_global"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <CheckBox
+                android:id="@+id/cb_monitor_global"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_global"
+                app:layout_constraintLeft_toRightOf="@id/tv_monitor_global"
+                app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
+
+            <Button
+                android:id="@+id/btn_monitor_list"
+                style="@style/defButtonStyle"
+                android:text="@string/btn_monitor_list"
+                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_global"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
+
+            <TextView
                 android:id="@+id/tv_interval"
                 style="@style/defTextStyle"
                 android:layout_marginTop="@dimen/space"
                 android:text="@string/tv_interval"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/tv_monitor_global"/>
 
             <EditText
                 android:id="@+id/et_interval"
@@ -125,27 +149,12 @@
                 app:layout_constraintTop_toTopOf="@id/tv_interval" />
 
             <TextView
-                android:id="@+id/tv_ignore"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_ignore"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_interval" />
-
-            <EditText
-                android:id="@+id/et_ignore"
-                style="@style/defEditStyle"
-                app:layout_constraintBottom_toBottomOf="@id/tv_ignore"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_ignore" />
-
-            <TextView
                 android:id="@+id/tv_delay"
                 style="@style/defTextStyle"
                 android:layout_marginTop="@dimen/space"
                 android:text="@string/tv_delay"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_ignore" />
+                app:layout_constraintTop_toBottomOf="@id/tv_interval" />
 
             <EditText
                 android:id="@+id/et_delay"
@@ -155,12 +164,27 @@
                 app:layout_constraintTop_toTopOf="@id/tv_delay" />
 
             <TextView
+                android:id="@+id/tv_ignore"
+                style="@style/defTextStyle"
+                android:layout_marginTop="@dimen/space"
+                android:text="@string/tv_ignore"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_delay" />
+
+            <EditText
+                android:id="@+id/et_ignore"
+                style="@style/defEditStyle"
+                app:layout_constraintBottom_toBottomOf="@id/tv_ignore"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tv_ignore" />
+
+            <TextView
                 android:id="@+id/tv_period"
                 style="@style/defTextStyle"
                 android:layout_marginTop="@dimen/space"
                 android:text="@string/tv_period_refresh"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_delay" />
+                app:layout_constraintTop_toBottomOf="@id/tv_ignore" />
 
             <EditText
                 android:id="@+id/et_period"
@@ -201,29 +225,6 @@
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="@id/tv_monitor_key" />
 
-            <TextView
-                android:id="@+id/tv_monitor_global"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_monitor_global"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_monitor_touch" />
-
-            <CheckBox
-                android:id="@+id/cb_monitor_global"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_global"
-                app:layout_constraintLeft_toRightOf="@id/tv_monitor_global"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
-
-            <Button
-                android:id="@+id/btn_monitor_list"
-                style="@style/defButtonStyle"
-                android:text="@string/btn_monitor_list"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_global"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
 
             <TextView
                 android:id="@+id/tv_auto_detect_reading"
@@ -231,7 +232,7 @@
                 android:layout_marginTop="@dimen/space"
                 android:text="@string/tv_auto_detect_reading"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_monitor_global" />
+                app:layout_constraintTop_toBottomOf="@id/tv_monitor_key" />
 
             <ImageButton
                 android:id="@+id/ib_reading_whitelist_help"

@@ -1,5 +1,6 @@
 package com.liziwa.hisense_autorefresh
 
+import com.liziwa.hisense_autorefresh.AppPreferences
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
@@ -54,6 +55,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
     private var isReading = false
     private var serviceSwitch = false
     private var choiceApps: List<String> = mutableListOf()
+    private var appConfigs: Map<String, Pair<Int, Int>> = emptyMap() // 各应用独立刷新配置（包名 -> 触发次数/延迟）
 
     private var periodRefresh = 0 // 周期刷新间隔（秒），0 表示关闭
     private var lastRefreshTime = 0L // 上次真正刷新时间（elapsedRealtime），用于周期刷新去重
@@ -94,6 +96,15 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
             prefs.readingWhitelist?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: emptyList()
         choiceApps = prefs.targetPackageName?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+        // 解析各应用独立刷新配置：格式 pkg:interval:delay,...
+        appConfigs = prefs.appRefreshConfigs?.split(",")?.filter { it.isNotEmpty() }?.mapNotNull { seg ->
+            val parts = seg.split(":")
+            if (parts.size == 3) {
+                val iv = parts[1].toIntOrNull() ?: AppPreferences.DEFAULT_APP_INTERVAL
+                val dv = parts[2].toIntOrNull() ?: AppPreferences.DEFAULT_APP_DELAY
+                parts[0] to (iv to dv)
+            } else null
+        }?.toMap() ?: emptyMap()
         periodRefresh = prefs.periodRefresh
         clickCount = 0
         isTarget = monitorGlobal || choiceApps.isEmpty()
@@ -511,6 +522,17 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
             return
         }
         XLog.d("userOperating: ")
+        // 计算有效触发阈值与延迟：监控所有应用时用全局配置，否则取该应用独立配置（缺省用默认值）
+        val effInterval: Int
+        val effDelay: Int
+        if (monitorGlobal) {
+            effInterval = interval
+            effDelay = delayTime
+        } else {
+            val cfg = appConfigs[currentPackage]
+            effInterval = cfg?.first ?: AppPreferences.DEFAULT_APP_INTERVAL
+            effDelay = cfg?.second ?: AppPreferences.DEFAULT_APP_DELAY
+        }
         val currentTime = SystemClock.elapsedRealtime()
         val timeDiff = currentTime - lastClickTime
 
@@ -518,12 +540,12 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
         if (timeDiff > ignoreTime) {
             clickCount++
 
-            XLog.d("操作计数: $clickCount/$interval, 包名: $currentPackage")
+            XLog.d("操作计数: $clickCount/$effInterval, 包名: $currentPackage")
 
-            if (clickCount >= interval) {
+            if (clickCount >= effInterval) {
                 // 触发全局刷新
                 myHandler.removeMessages(MSG_REFRESH_DISPLAY)
-                myHandler.sendEmptyMessageDelayed(MSG_REFRESH_DISPLAY, delayTime.toLong())
+                myHandler.sendEmptyMessageDelayed(MSG_REFRESH_DISPLAY, effDelay.toLong())
                 // 记录刷新时间，供周期刷新 30s 去重判断；并清零计数
                 lastRefreshTime = SystemClock.elapsedRealtime()
                 clickCount = 0
@@ -533,7 +555,7 @@ class EInkAccessibilityService : AccessibilityService(), View.OnTouchListener {
             notificationUtils.showNotification(
                 getString(
                     R.string.notification_text_detailed,
-                    interval - clickCount
+                    effInterval - clickCount
                 ), true
             )
         }

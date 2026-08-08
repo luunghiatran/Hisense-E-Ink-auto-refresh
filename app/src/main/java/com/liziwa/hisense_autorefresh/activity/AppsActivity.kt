@@ -1,15 +1,21 @@
 package com.liziwa.hisense_autorefresh.activity
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.text.InputType
 import android.text.TextUtils
 import android.view.View
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
@@ -80,20 +86,25 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
     private fun getAllApps() {
         launch {
             val choiceApps = if (mode == MODE_READING_WHITELIST) {
-                prefs.readingWhitelist?.split(",")?.filter({ it.isNotEmpty() })
+                prefs.readingWhitelist?.split(",")?.filter { it.isNotEmpty() }
             } else {
-                prefs.targetPackageName?.split(",")?.filter({ it.isNotEmpty() })
+                prefs.targetPackageName?.split(",")?.filter { it.isNotEmpty() }
             }
             XLog.d("getAllApps: mode=$mode, 已选=${choiceApps?.size}个")
             Utils.getLauncherApps(applicationContext)
                 .filter { !packageName.equals(it.packageName) } // 排除本应用，避免自我监控
                 .forEach { it ->
+                    // 读取该应用已保存的独立刷新配置（未配置则用默认值）
+                    val cfg = prefs.getAppRefreshConfig(it.packageName)
                     appItems.add(
                         AppListAdapter.ListItem(
                             it.name,
                             it.packageName,
                             it.icon,
-                            choiceApps?.contains(it.packageName) ?: false
+                            choiceApps?.contains(it.packageName) ?: false,
+                            cfg.first,
+                            cfg.second,
+                            mode == MODE_MONITOR // 仅监控模式显示独立配置入口
                         )
                     )
                 }
@@ -103,16 +114,79 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
     }
 
     private val adapter: AppListAdapter =
-        AppListAdapter(appItems, object : AppListAdapter.OnItemCheckedChangeListener {
-            override fun onItemCheckedChange(
-                position: Int,
-                item: AppListAdapter.ListItem,
-                checked: Boolean
-            ) {
-                item.isChecked = checked
-                adapter.notifyItemChanged(position)
+        AppListAdapter(
+            appItems,
+            object : AppListAdapter.OnItemCheckedChangeListener {
+                override fun onItemCheckedChange(
+                    position: Int,
+                    item: AppListAdapter.ListItem,
+                    checked: Boolean
+                ) {
+                    item.isChecked = checked
+                    adapter.notifyItemChanged(position)
+                }
+            },
+            object : AppListAdapter.OnItemConfigClickListener {
+                override fun onItemConfigClick(position: Int, item: AppListAdapter.ListItem) {
+                    showAppConfigDialog(position, item)
+                }
             }
-        })
+        )
+
+    /**
+     * 弹出独立配置窗口：编辑该应用的「触发屏幕刷新间隔次数」与「触发屏幕刷新时延迟」。
+     * 确认后写回 ListItem 并刷新列表显示。
+     */
+    private fun showAppConfigDialog(position: Int, item: AppListAdapter.ListItem) {
+        val intervalEdit = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(item.interval.toString())
+            hint = getString(R.string.hint_config_interval)
+        }
+        val delayEdit = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(item.delayTime.toString())
+            hint = getString(R.string.hint_config_delay)
+        }
+        val intervalLabel = TextView(this).apply {
+            text = getString(R.string.tv_interval)
+            textSize = 14f
+            setPadding(0, 16, 0, 4)
+        }
+        val delayLabel = TextView(this).apply {
+            text = getString(R.string.tv_delay)
+            textSize = 14f
+            setPadding(0, 16, 0, 4)
+        }
+        val tipText = TextView(this).apply {
+            text = getString(R.string.dialog_config_tip)
+            setTextColor(ContextCompat.getColor(this@AppsActivity, android.R.color.darker_gray))
+            textSize = 13f
+            setPadding(0, 0, 0, 8)
+        }
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 30, 50, 30)
+            addView(tipText)
+            addView(intervalLabel)
+            addView(intervalEdit)
+            addView(delayLabel)
+            addView(delayEdit)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("${item.title} ${getString(R.string.dialog_title_config)}")
+            .setView(layout)
+            .setPositiveButton(R.string.btn_confirm) { _, _ ->
+                val iv = intervalEdit.text.toString().toIntOrNull() ?: AppPreferences.DEFAULT_APP_INTERVAL
+                val dv = delayEdit.text.toString().toIntOrNull() ?: AppPreferences.DEFAULT_APP_DELAY
+                item.interval = iv
+                item.delayTime = dv
+                adapter.notifyItemChanged(position)
+                XLog.d("AppsActivity: 配置 pkg=${item.pkg}, interval=$iv, delay=$dv")
+            }
+            .setNegativeButton(R.string.btn_cancel) { d, _ -> d.dismiss() }
+            .show()
+    }
 
     private var myHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -141,6 +215,16 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
                     prefs.targetPackageName = stringBuilder.toString()
                     // 监控模式：选中为空则退化为“监控所有应用”
                     prefs.monitorGlobal = TextUtils.isEmpty(stringBuilder.toString())
+                    // 写入各选中应用的独立刷新配置（pkg:interval:delay）
+                    val configBuilder = StringBuilder()
+                    appItems.forEach { app ->
+                        if (app.isChecked) {
+                            configBuilder.append(app.pkg).append(":")
+                                .append(app.interval).append(":").append(app.delayTime).append(",")
+                        }
+                    }
+                    prefs.appRefreshConfigs = configBuilder.toString()
+                    XLog.d("onClick: 保存应用独立配置=${configBuilder}")
                 }
                 sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
                 Toast.makeText(applicationContext, R.string.toast_save, Toast.LENGTH_SHORT).show()

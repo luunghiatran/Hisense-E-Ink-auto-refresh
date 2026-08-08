@@ -2,6 +2,7 @@
 <layout>
 
     <data>
+        <import type="android.view.View" />
 
         <variable
             name="item"
@@ -12,7 +13,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="41dp"
+        android:layout_height="56dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp">
 
@@ -37,33 +38,50 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tv_title"
-            style="@style/defTextStyle"
-            android:layout_width="0dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:text="@{item.title}"
-            app:layout_constraintLeft_toRightOf="@id/iv_icon"
+        <!-- 配置按钮：位于应用名之后、复选框之前，点击弹出独立配置窗口（仅监控模式显示） -->
+        <Button
+            android:id="@+id/btn_config"
+            style="@style/defButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:text="@string/btn_config"
+            android:layout_marginEnd="10dp"
+            android:visibility="@{item.showConfig ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="@id/iv_icon"
+            app:layout_constraintLeft_toRightOf="@id/tv_title"
             app:layout_constraintRight_toLeftOf="@id/cb_choice"
             app:layout_constraintTop_toTopOf="@id/iv_icon" />
 
         <TextView
-            android:id="@+id/tv_pkg"
+            android:id="@+id/tv_title"
             style="@style/defTextStyle"
             android:layout_width="0dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
             android:ellipsize="end"
             android:singleLine="true"
-            android:text="@{item.pkg}"
-            android:textColor="@color/disable_text"
+            android:text="@{item.title}"
+            app:layout_constraintBottom_toTopOf="@id/tv_config"
+            app:layout_constraintLeft_toRightOf="@id/iv_icon"
+            app:layout_constraintRight_toLeftOf="@id/btn_config"
+            app:layout_constraintTop_toTopOf="@id/iv_icon" />
+
+        <!-- 当前应用独立配置：触发/延迟，仅监控模式显示 -->
+        <TextView
+            android:id="@+id/tv_config"
+            style="@style/defTextStyle"
+            android:layout_width="0dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:singleLine="true"
+            android:text="@{@string/tv_config_prefix + item.configText}"
             android:textSize="11sp"
+            android:visibility="@{item.showConfig ? View.VISIBLE : View.GONE}"
             app:layout_constraintBottom_toBottomOf="@id/iv_icon"
             app:layout_constraintLeft_toRightOf="@id/iv_icon"
-            app:layout_constraintRight_toLeftOf="@id/cb_choice" />
+            app:layout_constraintRight_toLeftOf="@id/btn_config"
+            app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

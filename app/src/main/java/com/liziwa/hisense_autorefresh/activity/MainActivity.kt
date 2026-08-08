@@ -119,6 +119,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.btnMonitorList.isEnabled =
             !monitorGlobal && !TextUtils.isEmpty(prefs.targetPackageName)
         binding.cbHideBackgroundTask.isChecked = prefs.hideBackgroundTask
+        // 监控所有应用关闭时，隐藏全局触发间隔/延迟（改由应用列表单独配置）
+        updateIntervalVisibility(monitorGlobal)
+    }
+
+    /** 监控所有应用开启时显示全局触发间隔/延迟；关闭时隐藏，改用各应用的独立配置 */
+    private fun updateIntervalVisibility(monitorAll: Boolean) {
+        val v = if (monitorAll) View.VISIBLE else View.GONE
+        binding.tvInterval.visibility = v
+        binding.etInterval.visibility = v
+        binding.tvDelay.visibility = v
+        binding.etDelay.visibility = v
     }
 
 
@@ -148,6 +159,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             binding.cbMonitorGlobal -> {
                 binding.btnMonitorList.isEnabled = !binding.cbMonitorGlobal.isChecked
                 binding.cbMonitorGlobal.tag = binding.cbMonitorGlobal.isChecked
+                // 切换监控范围时同步显示/隐藏全局触发间隔/延迟
+                updateIntervalVisibility(binding.cbMonitorGlobal.isChecked)
             }
 
             binding.cbAutoDetectReading -> {
@@ -174,9 +187,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             binding.btnSave -> {
+                // 监控所有应用开启时才校验并保存全局触发间隔/延迟；关闭时由应用列表单独配置
+                val monitorAll = binding.cbMonitorGlobal.isChecked
                 if (
-                    TextUtils.isEmpty(binding.etInterval.text) ||
-                    TextUtils.isEmpty(binding.etDelay.text) ||
+                    (monitorAll && TextUtils.isEmpty(binding.etInterval.text)) ||
+                    (monitorAll && TextUtils.isEmpty(binding.etDelay.text)) ||
                     TextUtils.isEmpty(binding.etIgnore.text) ||
                     TextUtils.isEmpty(binding.etPeriod.text)
                 ) {
@@ -189,8 +204,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     return
                 }
                 try {
-                    prefs.interval = binding.etInterval.text.toString().toInt()
-                    prefs.delayTime = binding.etDelay.text.toString().toInt()
+                    if (monitorAll) {
+                        prefs.interval = binding.etInterval.text.toString().toInt()
+                        prefs.delayTime = binding.etDelay.text.toString().toInt()
+                    }
                     prefs.ignoreTime = binding.etIgnore.text.toString().toInt()
                     prefs.periodRefresh = binding.etPeriod.text.toString().toInt()
                     prefs.monitorKey = binding.cbMonitorKey.isChecked

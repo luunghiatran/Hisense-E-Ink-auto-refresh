@@ -5,6 +5,12 @@
     <string name="title_activity_apps_whitelist">忽略应用列表</string>
     <string name="toast_debug_on">调试模式已开启</string>
     <string name="toast_debug_off">调试模式已关闭</string>
+    <string name="btn_config">配置</string>
+    <string name="tv_config_prefix">触发 | 延迟：</string>
+    <string name="dialog_title_config">配置</string>
+    <string name="dialog_config_tip">为该应用单独设置刷新参数</string>
+    <string name="hint_config_interval">触发屏幕刷新的操作次数</string>
+    <string name="hint_config_delay">触发刷新前的延迟毫秒</string>
     <string name="accessibility_service_description">无障碍服务用于获取屏幕及按键操作次数，并根据间隔刷新墨水屏</string>
     <string name="tv_service_status">服务状态</string>
     <string name="tv_accessibility_status">无障碍服务状态：</string>
