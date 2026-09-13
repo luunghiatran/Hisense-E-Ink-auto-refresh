@@ -101,9 +101,9 @@ A **forced full-screen refresh** tool for Hisense E-Ink devices. It monitors tou
 
 ## Screenshots
 
-screenshot/screenshot_1.png
-screenshot/screenshot_2.png
-screenshot/screenshot_3.png
+<img src="screenshot/screenshot_1.png" width="20%" /> 
+<img src="screenshot/screenshot_2.png" width="20%" /> 
+<img src="screenshot/screenshot_3.png" width="20%" />
 
 ---
 
