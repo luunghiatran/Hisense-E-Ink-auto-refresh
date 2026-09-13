@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="12dp">
+
+                <!-- Management Bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
+
+                    <TextView
+                        android:id="@+id/tv_monitor"
+                        style="@style/defTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="@string/tv_monitor_status" />
+
+                    <TextView
+                        android:id="@+id/tv_monitor_status"
+                        style="@style/defTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btn_monitor_on"
+                        style="@style/defButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/btn_on" />
+
+                    <Button
+                        android:id="@+id/btn_monitor_off"
+                        style="@style/defButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/btn_off" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/black" />
+
+                <!-- Permission Section -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    style="@style/areaStyle"
+                    android:layout_marginTop="2dp">
+
+                    <TextView
+                        android:id="@+id/tv_accessibility"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:text="@string/tv_accessibility_status"
+                        app:layout_constraintBottom_toBottomOf="@+id/btn_grant_accessibility"
+                        app:layout_constraintEnd_toStartOf="@+id/btn_grant_accessibility"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <Button
+                        android:id="@+id/btn_grant_accessibility"
+                        style="@style/statusButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Not Granted"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/black" />
+
+                <!-- Options Section -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    style="@style/areaStyle"
+                    android:layout_marginTop="2dp">
+
+                    <TextView
+                        android:id="@+id/tv_monitor_global"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:text="@string/tv_monitor_global"
+                        app:layout_constraintBottom_toBottomOf="@id/cb_monitor_global"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/cb_monitor_global" />
+
+                    <CheckBox
+                        android:id="@+id/cb_monitor_global"
+                        style="@style/NoAnimCheckBox"
+                        android:layout_width="@dimen/touch_min"
+                        android:layout_height="@dimen/touch_min"
+                        android:layout_marginTop="4dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <Button
+                        android:id="@+id/btn_monitor_list"
+                        style="@style/defButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/btn_monitor_list"
+                        app:layout_constraintEnd_toStartOf="@+id/cb_monitor_global"
+                        app:layout_constraintStart_toEndOf="@+id/tv_monitor_global"
+                        app:layout_constraintTop_toTopOf="@+id/cb_monitor_global" />
+
+                    <TextView
+                        android:id="@+id/tv_interval"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_interval"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/et_interval"
+                        app:layout_constraintTop_toTopOf="@id/et_interval"
+                        app:layout_constraintBottom_toBottomOf="@id/et_interval" />
+
+                    <EditText
+                        android:id="@+id/et_interval"
+                        style="@style/defEditStyle"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:inputType="number"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/btn_monitor_list" />
+
+                    <TextView
+                        android:id="@+id/tv_delay"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_delay"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/et_delay"
+                        app:layout_constraintTop_toTopOf="@id/et_delay"
+                        app:layout_constraintBottom_toBottomOf="@id/et_delay" />
+
+                    <EditText
+                        android:id="@+id/et_delay"
+                        style="@style/defEditStyle"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:inputType="number"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/et_interval" />
+
+                    <TextView
+                        android:id="@+id/tv_ignore"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_ignore"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/et_ignore"
+                        app:layout_constraintTop_toTopOf="@id/et_ignore"
+                        app:layout_constraintBottom_toBottomOf="@id/et_ignore" />
+
+                    <EditText
+                        android:id="@+id/et_ignore"
+                        style="@style/defEditStyle"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:inputType="number"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/et_delay" />
+
+                    <TextView
+                        android:id="@+id/tv_monitor_key"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_monitor_key"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/cb_monitor_key"
+                        app:layout_constraintTop_toTopOf="@id/cb_monitor_key"
+                        app:layout_constraintBottom_toBottomOf="@id/cb_monitor_key" />
+
+                    <CheckBox
+                        android:id="@+id/cb_monitor_key"
+                        style="@style/NoAnimCheckBox"
+                        android:layout_width="@dimen/touch_min"
+                        android:layout_height="@dimen/touch_min"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/et_ignore" />
+
+                    <TextView
+                        android:id="@+id/tv_auto_detect_reading"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="2dp"
+                        android:text="@string/tv_auto_detect_reading"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/ib_reading_whitelist_help"
+                        app:layout_constraintTop_toTopOf="@id/cb_auto_detect_reading"
+                        app:layout_constraintBottom_toBottomOf="@id/cb_auto_detect_reading" />
+
+                    <ImageButton
+                        android:id="@+id/ib_reading_whitelist_help"
+                        android:layout_width="@dimen/touch_min"
+                        android:layout_height="@dimen/touch_min"
+                        android:layout_marginTop="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/btn_reading_whitelist_hint"
+                        android:padding="12dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/help"
+                        app:tint="@color/black"
+                        app:layout_constraintStart_toEndOf="@id/tv_auto_detect_reading"
+                        app:layout_constraintEnd_toStartOf="@id/cb_auto_detect_reading"
+                        app:layout_constraintTop_toTopOf="@id/cb_auto_detect_reading"
+                        app:layout_constraintBottom_toBottomOf="@id/cb_auto_detect_reading" />
+
+                    <CheckBox
+                        android:id="@+id/cb_auto_detect_reading"
+                        style="@style/NoAnimCheckBox"
+                        android:layout_width="@dimen/touch_min"
+                        android:layout_height="@dimen/touch_min"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/cb_monitor_key" />
+
+                    <Button
+                        android:id="@+id/btn_reading_whitelist"
+                        style="@style/defButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/btn_reading_whitelist"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/cb_auto_detect_reading" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/black" />
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </LinearLayout>
+
+</layout>

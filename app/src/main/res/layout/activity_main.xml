@@ -1,319 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".activity.MainActivity">
+        android:background="@color/white"
+        android:orientation="vertical">
 
-        <!-- 自定义轻量标题栏（替代原生 ActionBar） -->
-        <LinearLayout
-            android:id="@+id/cl_custom_title"
-            style="@style/CustomTitleBarStyle"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="vertical">
 
-            <TextView
-                android:id="@+id/tv_custom_title"
-                style="@style/CustomTitleTextStyle"
-                android:text="@string/title_activity_main" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_service_status_title"
-            style="@style/areaTitleStyle"
-            android:text="@string/tv_service_status"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cl_custom_title" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/cl_service_status"
-            style="@style/areaStyle"
-            android:background="@drawable/area_border_line"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_service_status_title">
-
-            <TextView
-                android:id="@+id/tv_accessibility"
-                style="@style/defTextStyle"
-                android:layout_marginTop="20dp"
-                android:text="@string/tv_accessibility_status"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tv_accessibility_status"
-                style="@style/defTextStyle"
-                app:layout_constraintBottom_toBottomOf="@id/tv_accessibility"
-                app:layout_constraintLeft_toRightOf="@id/tv_accessibility"
-                app:layout_constraintTop_toTopOf="@id/tv_accessibility" />
-
-            <Button
-                android:id="@+id/btn_to_accessibility_settings"
-                style="@style/defButtonStyle"
-                android:text="@string/btn_to_settings"
-                app:layout_constraintBottom_toBottomOf="@id/tv_accessibility"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_accessibility" />
-
-            <TextView
-                android:id="@+id/tv_monitor"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_monitor_status"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_accessibility" />
-
-            <TextView
-                android:id="@+id/tv_monitor_status"
-                style="@style/defTextStyle"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor"
-                app:layout_constraintLeft_toRightOf="@id/tv_monitor"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor" />
-
-            <Button
-                android:id="@+id/btn_monitor_status_off"
-                style="@style/defButtonStyle"
-                android:text="@string/btn_off"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor" />
-
-            <Button
-                android:id="@+id/btn_monitor_status_on"
-                style="@style/defButtonStyle"
-                android:layout_marginRight="10dp"
-                android:text="@string/btn_on"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor"
-                app:layout_constraintRight_toLeftOf="@id/btn_monitor_status_off"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <TextView
-            android:id="@+id/tv_config_title"
-            style="@style/areaTitleStyle"
-            android:text="@string/tv_config_title"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cl_service_status" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/cl_config"
-            style="@style/areaStyle"
-            android:background="@drawable/area_border_line"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_config_title">
-
-            <TextView
-                android:id="@+id/tv_monitor_global"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_monitor_global"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <CheckBox
-                android:id="@+id/cb_monitor_global"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_global"
-                app:layout_constraintLeft_toRightOf="@id/tv_monitor_global"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
+                android:orientation="vertical"
+                android:paddingBottom="12dp">
 
-            <Button
-                android:id="@+id/btn_monitor_list"
-                style="@style/defButtonStyle"
-                android:text="@string/btn_monitor_list"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_global"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor_global" />
+                <!-- TITLE BAR -->
+                <LinearLayout
+                    android:id="@+id/ll_title_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="4dp">
 
-            <TextView
-                android:id="@+id/tv_interval"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_interval"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_monitor_global"/>
+                    <TextView
+                        android:id="@+id/tv_custom_title"
+                        style="@style/CustomTitleTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/title_activity_main" />
 
-            <EditText
-                android:id="@+id/et_interval"
-                style="@style/defEditStyle"
-                app:layout_constraintBottom_toBottomOf="@id/tv_interval"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_interval" />
+                    <Button
+                        android:id="@+id/btn_test"
+                        style="@style/titleButtonStyle"
+                        android:text="@string/btn_test" />
 
-            <TextView
-                android:id="@+id/tv_delay"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_delay"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_interval" />
+                    <Button
+                        android:id="@+id/btn_exit"
+                        style="@style/titleButtonStyle"
+                        android:text="@string/btn_exit" />
 
-            <EditText
-                android:id="@+id/et_delay"
-                style="@style/defEditStyle"
-                app:layout_constraintBottom_toBottomOf="@id/tv_delay"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_delay" />
+                </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_ignore"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_ignore"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_delay" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:background="@color/black"
+                    android:layout_marginTop="4dp"/>
 
-            <EditText
-                android:id="@+id/et_ignore"
-                style="@style/defEditStyle"
-                app:layout_constraintBottom_toBottomOf="@id/tv_ignore"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_ignore" />
+                <!-- TAB HEADER -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tv_period"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_period_refresh"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_ignore" />
+                    <LinearLayout
+                        android:id="@+id/ll_monitor_repeatedly"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center">
 
-            <EditText
-                android:id="@+id/et_period"
-                style="@style/defEditStyle"
-                app:layout_constraintBottom_toBottomOf="@id/tv_period"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_period" />
+                        <TextView
+                            android:id="@+id/tv_monitor_repeatedly"
+                            style="@style/defTextStyle"
+                            android:background="@android:color/transparent"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp"
+                            android:text="@string/btn_monitor_repeatedly" />
+                    </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_monitor_touch"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_monitor_touch"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_period" />
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/black" />
 
-            <CheckBox
-                android:id="@+id/cb_monitor_touch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_touch"
-                app:layout_constraintLeft_toRightOf="@id/tv_monitor_touch"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor_touch" />
+                    <LinearLayout
+                        android:id="@+id/ll_monitor_interaction"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center">
 
-            <TextView
-                android:id="@+id/tv_monitor_key"
-                style="@style/defTextStyle"
-                android:text="@string/tv_monitor_key"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_touch"
-                app:layout_constraintRight_toLeftOf="@id/cb_monitor_key"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor_touch" />
+                        <TextView
+                            android:id="@+id/tv_monitor_interaction"
+                            style="@style/defTextStyle"
+                            android:background="@android:color/transparent"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp"
+                            android:text="@string/btn_monitor_interaction" />
+                    </LinearLayout>
 
-            <CheckBox
-                android:id="@+id/cb_monitor_key"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@id/tv_monitor_key"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_monitor_key" />
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/black" />
 
+                    <LinearLayout
+                        android:id="@+id/ll_monitor_draw_over"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center">
 
-            <TextView
-                android:id="@+id/tv_auto_detect_reading"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_auto_detect_reading"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_monitor_key" />
+                        <TextView
+                            android:id="@+id/tv_monitor_draw_over"
+                            style="@style/defTextStyle"
+                            android:background="@android:color/transparent"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp"
+                            android:text="@string/btn_monitor_draw_over" />
+                    </LinearLayout>
+                </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/ib_reading_whitelist_help"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="@null"
-                android:contentDescription="@string/btn_reading_whitelist_hint"
-                android:padding="8dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/help"
-                app:layout_constraintBottom_toBottomOf="@id/tv_auto_detect_reading"
-                app:layout_constraintLeft_toRightOf="@id/tv_auto_detect_reading"
-                app:layout_constraintTop_toTopOf="@id/tv_auto_detect_reading" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:background="@color/black"
+                    android:layout_marginBottom="4dp"/>
 
-            <CheckBox
-                android:id="@+id/cb_auto_detect_reading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@id/tv_auto_detect_reading"
-                app:layout_constraintLeft_toRightOf="@id/ib_reading_whitelist_help"
-                app:layout_constraintTop_toTopOf="@id/tv_auto_detect_reading" />
+                <!-- CONTENT AREA -->
+                <include
+                    android:id="@+id/layout_repeatedly"
+                    layout="@layout/layout_repeatedly_refresh"
+                    android:visibility="visible" />
 
+                <include
+                    android:id="@+id/layout_accessibility"
+                    layout="@layout/layout_accessibility_service_refresh"
+                    android:visibility="gone" />
 
-            <Button
-                android:id="@+id/btn_reading_whitelist"
-                style="@style/defButtonStyle"
-                android:text="@string/btn_reading_whitelist"
-                app:layout_constraintBottom_toBottomOf="@id/tv_auto_detect_reading"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_auto_detect_reading" />
+                <include
+                    android:id="@+id/layout_draw_over"
+                    layout="@layout/layout_draw_over"
+                    android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/tv_hide_background_task"
-                style="@style/defTextStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/tv_hide_background_task"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_auto_detect_reading" />
+            </LinearLayout>
 
-            <CheckBox
-                android:id="@+id/cb_hide_background_task"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@id/tv_hide_background_task"
-                app:layout_constraintLeft_toRightOf="@id/tv_hide_background_task"
-                app:layout_constraintTop_toTopOf="@id/tv_hide_background_task" />
+        </ScrollView>
 
-            <Button
-                android:id="@+id/btn_save"
-                style="@style/defButtonStyle"
-                android:layout_marginTop="@dimen/space"
-                android:text="@string/btn_save"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_hide_background_task" />
+    </LinearLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <Button
-            android:id="@+id/btn_test"
-            style="@style/defButtonStyle"
-            android:layout_width="0dp"
-            android:layout_marginLeft="@dimen/area_margin"
-            android:layout_marginRight="5dp"
-            android:layout_marginBottom="10dp"
-            android:text="@string/btn_test"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@id/btn_exit" />
-
-        <Button
-            android:id="@+id/btn_exit"
-            style="@style/defButtonStyle"
-            android:layout_width="0dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="@dimen/area_margin"
-            android:text="@string/btn_exit"
-            app:layout_constraintBottom_toBottomOf="@id/btn_test"
-            app:layout_constraintLeft_toRightOf="@id/btn_test"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@id/btn_test" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

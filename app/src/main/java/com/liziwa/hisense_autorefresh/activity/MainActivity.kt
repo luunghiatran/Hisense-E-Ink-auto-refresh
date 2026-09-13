@@ -1,22 +1,36 @@
 package com.liziwa.hisense_autorefresh.activity
 
+import android.Manifest
 import android.app.ActivityManager
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextUtils
 import android.view.View
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.AppPreferences
-import com.liziwa.hisense_autorefresh.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.service.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.service.EInkRepeatedlyRefreshService
+import com.liziwa.hisense_autorefresh.service.EInkTouchOverlayService
 import com.liziwa.hisense_autorefresh.MyApp
 import com.liziwa.hisense_autorefresh.util.PermissionHelper
 import com.liziwa.hisense_autorefresh.R
@@ -26,16 +40,15 @@ import com.liziwa.hisense_autorefresh.util.NotificationUtils
 
 /**
  * 主界面：展示/配置监控开关、阈值、监控范围与阅读白名单，并引导权限申请。
- * 配置通过 SharedPreferences 持久化；保存时发送 ACTION_CONFIG_CHANGE 广播通知服务热更新。
  */
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: AppPreferences
     private val PERMISSION_REQUEST_OVERLAY = 1001
-    private var titleClickCount = 0 // 主标题连点计数，达到阈值切换调试模式
+    private var titleClickCount = 0
 
-    private var dialog: AlertDialog? = null
+    private enum class Tab { REPEATEDLY, INTERACTION, DRAW_OVER }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,22 +62,54 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         prefs = AppPreferences.getInstance(applicationContext)
 
-        binding.btnToAccessibilitySettings.setOnClickListener { this.onClick(it) }
-        binding.btnMonitorStatusOn.setOnClickListener { this.onClick(it) }
-        binding.btnMonitorStatusOff.setOnClickListener { this.onClick(it) }
-        binding.cbMonitorTouch.setOnClickListener { this.onClick(it) }
-        binding.cbMonitorKey.setOnClickListener { this.onClick(it) }
-        binding.cbMonitorGlobal.setOnClickListener { this.onClick(it) }
-        binding.cbAutoDetectReading.setOnClickListener { this.onClick(it) }
-        binding.btnMonitorList.setOnClickListener { this.onClick(it) }
-        binding.btnReadingWhitelist.setOnClickListener { this.onClick(it) }
-        binding.ibReadingWhitelistHelp.setOnClickListener { this.onClick(it) }
-        binding.btnSave.setOnClickListener { this.onClick(it) }
-        binding.btnTest.setOnClickListener { this.onClick(it) }
-        binding.btnExit.setOnClickListener { this.onClick(it) }
+        setupListeners()
         NotificationUtils.getInstance(this).removeErrorNotification()
+        
+        showTab(Tab.REPEATEDLY)
+        updateUI()
+    }
 
-        // 主标题连点 10 次切换调试模式（默认关闭）：开启后 XLog 写文件并打开详细日志
+    private fun setupListeners() {
+        // Tab Headers
+        binding.llMonitorRepeatedly.setOnClickListener(this)
+        binding.llMonitorInteraction.setOnClickListener(this)
+        binding.llMonitorDrawOver.setOnClickListener(this)
+
+        // Title Bar Buttons
+        binding.btnTest.setOnClickListener(this)
+        binding.btnExit.setOnClickListener(this)
+
+        // Accessibility Layout
+        with(binding.layoutAccessibility) {
+            btnMonitorOn.setOnClickListener(this@MainActivity)
+            btnMonitorOff.setOnClickListener(this@MainActivity)
+            btnGrantAccessibility.setOnClickListener(this@MainActivity)
+            cbMonitorKey.setOnClickListener(this@MainActivity)
+            cbMonitorGlobal.setOnClickListener(this@MainActivity)
+            cbAutoDetectReading.setOnClickListener(this@MainActivity)
+            btnMonitorList.setOnClickListener(this@MainActivity)
+            btnReadingWhitelist.setOnClickListener(this@MainActivity)
+            ibReadingWhitelistHelp.setOnClickListener(this@MainActivity)
+        }
+
+        // Repeatedly Layout
+        with(binding.layoutRepeatedly) {
+            btnRepeatedlyOn.setOnClickListener(this@MainActivity)
+            btnRepeatedlyOff.setOnClickListener(this@MainActivity)
+            btnGrantBattery.setOnClickListener(this@MainActivity)
+            tvBatteryOptimizationStatus.setOnClickListener(this@MainActivity)
+            tvNotificationsStatus.setOnClickListener(this@MainActivity)
+            cbAutoStartBoot.setOnClickListener(this@MainActivity)
+            cbHideBackgroundTask.setOnClickListener(this@MainActivity)
+        }
+
+        // Draw Over Layout
+        with(binding.layoutDrawOver) {
+            btnTouchOn.setOnClickListener(this@MainActivity)
+            btnTouchOff.setOnClickListener(this@MainActivity)
+            btnGrantOverlay.setOnClickListener(this@MainActivity)
+        }
+
         binding.tvCustomTitle.setOnClickListener {
             titleClickCount++
             if (titleClickCount >= 10) {
@@ -72,238 +117,288 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 val newMode = !prefs.debugMode
                 prefs.debugMode = newMode
                 MyApp.reinitXLog(applicationContext)
-                XLog.i("MainActivity: 调试模式切换为 $newMode")
-                Toast.makeText(
-                    this,
-                    if (newMode) getString(R.string.toast_debug_on) else getString(R.string.toast_debug_off),
-                    Toast.LENGTH_SHORT
-                ).show()
+                XLog.i("MainActivity: Debug mode $newMode")
+                Toast.makeText(this, if (newMode) R.string.toast_debug_on else R.string.toast_debug_off, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun setTabStyling(layout: LinearLayout, textView: TextView, active: Boolean) {
+        val (bgColor, textColor, typeface) = if (active) {
+            Triple(Color.BLACK, Color.WHITE, Typeface.DEFAULT_BOLD)
+        } else {
+            Triple(Color.TRANSPARENT, Color.BLACK, Typeface.DEFAULT)
+        }
+        layout.setBackgroundColor(bgColor)
+        textView.setTextColor(textColor)
+        textView.typeface = typeface
+    }
+
+    private fun showTab(tab: Tab) {
+        binding.layoutRepeatedly.root.visibility = if (tab == Tab.REPEATEDLY) View.VISIBLE else View.GONE
+        binding.layoutAccessibility.root.visibility = if (tab == Tab.INTERACTION) View.VISIBLE else View.GONE
+        binding.layoutDrawOver.root.visibility = if (tab == Tab.DRAW_OVER) View.VISIBLE else View.GONE
+
+        setTabStyling(binding.llMonitorRepeatedly, binding.tvMonitorRepeatedly, tab == Tab.REPEATEDLY)
+        setTabStyling(binding.llMonitorInteraction, binding.tvMonitorInteraction, tab == Tab.INTERACTION)
+        setTabStyling(binding.llMonitorDrawOver, binding.tvMonitorDrawOver, tab == Tab.DRAW_OVER)
     }
 
     fun updateUI() {
-        val isAccessibilityServiceEnabled = Utils.isAccessibilityServiceEnabled(applicationContext)
-        binding.tvAccessibilityStatus.text = if (isAccessibilityServiceEnabled) {
-            prefs.serviceState = true
-            getString(R.string.tv_status_active)
-        } else {
-            prefs.serviceState = false
-            getString(R.string.tv_status_stop)
-        }
-        binding.tvMonitor.isEnabled = isAccessibilityServiceEnabled
-        binding.tvMonitorStatus.isEnabled = isAccessibilityServiceEnabled
-        binding.btnMonitorStatusOn.isEnabled = isAccessibilityServiceEnabled
-        binding.btnMonitorStatusOff.isEnabled = isAccessibilityServiceEnabled
-        binding.tvMonitorStatus.text = if (isAccessibilityServiceEnabled && prefs.serviceSwitch) {
-            getString(R.string.tv_status_active)
-        } else {
-            getString(R.string.tv_status_stop)
-        }
-        binding.btnMonitorStatusOn.isEnabled = isAccessibilityServiceEnabled && !prefs.serviceSwitch
-        binding.btnMonitorStatusOff.isEnabled = isAccessibilityServiceEnabled && prefs.serviceSwitch
-        binding.etInterval.text =
-            Editable.Factory.getInstance().newEditable(prefs.interval.toString())
-        binding.etDelay.text =
-            Editable.Factory.getInstance().newEditable(prefs.delayTime.toString())
-        binding.etIgnore.text =
-            Editable.Factory.getInstance().newEditable(prefs.ignoreTime.toString())
-        binding.etPeriod.text =
-            Editable.Factory.getInstance().newEditable(prefs.periodRefresh.toString())
-        binding.cbMonitorTouch.isChecked = prefs.monitorTouch
-        binding.cbMonitorKey.isChecked = prefs.monitorKey
-        binding.cbAutoDetectReading.isChecked = prefs.autoDetectReading
-        val monitorGlobal = binding.cbMonitorGlobal.tag as Boolean? ?: prefs.monitorGlobal
-        binding.cbMonitorGlobal.isChecked =
-            monitorGlobal || TextUtils.isEmpty(prefs.targetPackageName)
-        binding.btnMonitorList.isEnabled =
-            !monitorGlobal && !TextUtils.isEmpty(prefs.targetPackageName)
-        binding.cbHideBackgroundTask.isChecked = prefs.hideBackgroundTask
-        // 监控所有应用关闭时，隐藏全局触发间隔/延迟（改由应用列表单独配置）
+        updateAccessibilityUI()
+        updateRepeatedlyUI()
+        updateDrawOverUI()
+        updatePermissionButtonStatus()
+    }
+
+    private fun updateAccessibilityUI() {
+        val acc = binding.layoutAccessibility
+        val hasAcc = Utils.isAccessibilityServiceEnabled(applicationContext)
+        prefs.serviceState = hasAcc
+
+        val isAccRunning = EInkAccessibilityService.isRunning
+        acc.btnMonitorOn.text = if (isAccRunning && prefs.serviceSwitch) getString(R.string.btn_apply) else getString(R.string.btn_on)
+        acc.btnMonitorOff.isEnabled = hasAcc && prefs.serviceSwitch
+        acc.tvMonitorStatus.text = if (prefs.serviceSwitch) getString(R.string.tv_status_active) else getString(R.string.tv_status_stop)
+
+        if (!acc.etInterval.isFocused) acc.etInterval.setText(prefs.interval.toString())
+        if (!acc.etDelay.isFocused) acc.etDelay.setText(prefs.delayTime.toString())
+        if (!acc.etIgnore.isFocused) acc.etIgnore.setText(prefs.ignoreTime.toString())
+        
+        acc.cbMonitorKey.isChecked = prefs.monitorKey
+        acc.cbAutoDetectReading.isChecked = prefs.autoDetectReading
+
+        val monitorGlobal = acc.cbMonitorGlobal.tag as Boolean? ?: prefs.monitorGlobal
+        acc.cbMonitorGlobal.isChecked = monitorGlobal || TextUtils.isEmpty(prefs.targetPackageName)
+        acc.btnMonitorList.isEnabled = !monitorGlobal && !TextUtils.isEmpty(prefs.targetPackageName)
         updateIntervalVisibility(monitorGlobal)
     }
 
-    /** 监控所有应用开启时显示全局触发间隔/延迟；关闭时隐藏，改用各应用的独立配置 */
-    private fun updateIntervalVisibility(monitorAll: Boolean) {
-        val v = if (monitorAll) View.VISIBLE else View.GONE
-        binding.tvInterval.visibility = v
-        binding.etInterval.visibility = v
-        binding.tvDelay.visibility = v
-        binding.etDelay.visibility = v
+    private fun updateRepeatedlyUI() {
+        val per = binding.layoutRepeatedly
+        val isPerRunning = EInkRepeatedlyRefreshService.isRunning
+        per.tvRepeatedlyMonitorStatus.text = if (prefs.repeatedlyServiceSwitch) getString(R.string.tv_status_active) else getString(R.string.tv_status_stop)
+        per.btnRepeatedlyOn.text = if (isPerRunning && prefs.repeatedlyServiceSwitch) getString(R.string.btn_apply) else getString(R.string.btn_on)
+        per.btnRepeatedlyOff.isEnabled = prefs.repeatedlyServiceSwitch
+
+        if (!per.etPeriod.isFocused) {
+            per.etPeriod.setText(prefs.periodRefresh.toString())
+        }
+        per.cbAutoStartBoot.isChecked = prefs.autoStartOnBoot
+        per.cbHideBackgroundTask.isChecked = prefs.hideBackgroundTask
     }
 
+    private fun updateDrawOverUI() {
+        val draw = binding.layoutDrawOver
+        val isTouchRunning = EInkTouchOverlayService.isRunning
+        val hasOverlay = PermissionHelper.hasOverlayPermission(this)
+        draw.tvTouchStatus.text = if (prefs.touchServiceSwitch) getString(R.string.tv_status_active) else getString(R.string.tv_status_stop)
+        draw.btnTouchOn.text = if (isTouchRunning && prefs.touchServiceSwitch) getString(R.string.btn_apply) else getString(R.string.btn_on)
+        draw.btnTouchOff.isEnabled = hasOverlay && prefs.touchServiceSwitch
+
+        if (!draw.etInterval.isFocused) draw.etInterval.setText(prefs.touchInterval.toString())
+        if (!draw.etDelay.isFocused) draw.etDelay.setText(prefs.touchDelayTime.toString())
+        if (!draw.etIgnore.isFocused) draw.etIgnore.setText(prefs.touchIgnoreTime.toString())
+    }
+
+    private fun updatePermissionButtonStatus() {
+        val hasAcc = Utils.isAccessibilityServiceEnabled(applicationContext)
+        val hasOverlay = PermissionHelper.hasOverlayPermission(this)
+        val hasBattery = PermissionHelper.hasIgnoringBatteryOptimizationsPermission(this)
+        val hasNotify = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        } else true
+
+        val grantedStr = getString(R.string.status_granted)
+        val notGrantedStr = getString(R.string.status_not_granted)
+
+        binding.layoutAccessibility.btnGrantAccessibility.text = if (hasAcc) grantedStr else notGrantedStr
+        binding.layoutDrawOver.btnGrantOverlay.text = if (hasOverlay) grantedStr else notGrantedStr
+        binding.layoutRepeatedly.btnGrantBattery.text = if (hasBattery) grantedStr else notGrantedStr
+        binding.layoutRepeatedly.tvBatteryOptimizationStatus.text = if (hasBattery) grantedStr else notGrantedStr
+        binding.layoutRepeatedly.tvNotificationsStatus.text = if (hasNotify) grantedStr else notGrantedStr
+    }
+
+    private fun updateIntervalVisibility(monitorAll: Boolean) {
+        val v = if (monitorAll) View.VISIBLE else View.GONE
+        with(binding.layoutAccessibility) {
+            tvInterval.visibility = v
+            etInterval.visibility = v
+            tvDelay.visibility = v
+            etDelay.visibility = v
+        }
+    }
 
     override fun onClick(p0: View) {
-        when (p0) {
-            binding.btnToAccessibilitySettings -> {
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            }
+        when (p0.id) {
+            binding.llMonitorRepeatedly.id -> showTab(Tab.REPEATEDLY)
+            binding.llMonitorInteraction.id -> showTab(Tab.INTERACTION)
+            binding.llMonitorDrawOver.id -> showTab(Tab.DRAW_OVER)
 
-            binding.btnMonitorStatusOn -> {
-                if (prefs.permissionOverlay != 1) {
-                    dialog =
-                        PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
-                    return
+            R.id.btn_grant_accessibility -> startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            R.id.btn_grant_overlay -> PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
+            R.id.btn_grant_battery -> PermissionHelper.requestIgnoreBatteryOptimizationsPermission(this)
+            R.id.tv_battery_optimization_status -> if (!PermissionHelper.hasIgnoringBatteryOptimizationsPermission(this)) PermissionHelper.requestIgnoreBatteryOptimizationsPermission(this)
+            R.id.tv_notifications_status -> if (!PermissionHelper.hasNotificationsPermission(this)) PermissionHelper.requestNotificationsPermission(this)
+
+            R.id.btn_monitor_on -> {
+                if (!checkAccessibilityPermission()) return
+                if (saveSettings()) {
+                    prefs.serviceSwitch = true
+                    updateUI()
+                    sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
+                    Toast.makeText(this, R.string.toast_monitor_applied, Toast.LENGTH_SHORT).show()
                 }
-                prefs.serviceSwitch = true
-                updateUI()
-                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
             }
-
-            binding.btnMonitorStatusOff -> {
+            R.id.btn_monitor_off -> if (saveSettings()) {
                 prefs.serviceSwitch = false
                 updateUI()
-                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
+                sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
             }
 
-            binding.cbMonitorGlobal -> {
-                binding.btnMonitorList.isEnabled = !binding.cbMonitorGlobal.isChecked
-                binding.cbMonitorGlobal.tag = binding.cbMonitorGlobal.isChecked
-                // 切换监控范围时同步显示/隐藏全局触发间隔/延迟
-                updateIntervalVisibility(binding.cbMonitorGlobal.isChecked)
+            R.id.btn_touch_on -> {
+                if (!checkOverlayPermission()) return
+                if (saveSettings()) {
+                    prefs.touchServiceSwitch = true
+                    updateUI()
+                    ContextCompat.startForegroundService(this, Intent(this, EInkTouchOverlayService::class.java))
+                    sendBroadcast(Intent(EInkTouchOverlayService.ACTION_CONFIG_CHANGE))
+                    Toast.makeText(this, R.string.toast_touch_applied, Toast.LENGTH_SHORT).show()
+                }
+            }
+            R.id.btn_touch_off -> if (saveSettings()) {
+                prefs.touchServiceSwitch = false
+                updateUI()
+                stopService(Intent(this, EInkTouchOverlayService::class.java))
             }
 
-            binding.cbAutoDetectReading -> {
-                // 仅记录勾选状态，保存时统一写入
+            R.id.btn_repeatedly_on -> if (saveSettings()) {
+                prefs.repeatedlyServiceSwitch = true
+                updateUI()
+                ContextCompat.startForegroundService(this, Intent(this, EInkRepeatedlyRefreshService::class.java))
+                sendBroadcast(Intent(EInkRepeatedlyRefreshService.ACTION_CONFIG_CHANGE))
+                Toast.makeText(this, R.string.toast_repeatedly_applied, Toast.LENGTH_SHORT).show()
+            }
+            R.id.btn_repeatedly_off -> if (saveSettings()) {
+                prefs.repeatedlyServiceSwitch = false
+                updateUI()
+                stopService(Intent(this, EInkRepeatedlyRefreshService::class.java))
             }
 
-            binding.btnMonitorList -> {
-                startActivity(Intent(this, AppsActivity::class.java))
-            }
-
-            binding.btnReadingWhitelist -> {
-                startActivity(Intent(this, AppsActivity::class.java).apply {
-                    putExtra(AppsActivity.EXTRA_MODE, AppsActivity.MODE_READING_WHITELIST)
-                })
-            }
-
-            binding.ibReadingWhitelistHelp -> {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.dialog_title_tip)
-                    .setMessage(R.string.btn_reading_whitelist_hint)
-                    .setPositiveButton(R.string.btn_confirm) { dialog, which ->
-                        dialog.dismiss()
-                    }.show()
-            }
-
-            binding.btnSave -> {
-                // 监控所有应用开启时才校验并保存全局触发间隔/延迟；关闭时由应用列表单独配置
-                val monitorAll = binding.cbMonitorGlobal.isChecked
-                if (
-                    (monitorAll && TextUtils.isEmpty(binding.etInterval.text)) ||
-                    (monitorAll && TextUtils.isEmpty(binding.etDelay.text)) ||
-                    TextUtils.isEmpty(binding.etIgnore.text) ||
-                    TextUtils.isEmpty(binding.etPeriod.text)
-                ) {
-                    AlertDialog.Builder(this)
-                        .setTitle(R.string.error)
-                        .setMessage(R.string.error_empty_config)
-                        .setPositiveButton(R.string.btn_confirm) { dialog, which ->
-                            dialog.dismiss()
-                        }.show()
+            R.id.cb_monitor_global -> {
+                val cb = binding.layoutAccessibility.cbMonitorGlobal
+                if (cb.isChecked && !Utils.isAccessibilityServiceEnabled(applicationContext)) {
+                    cb.isChecked = false
                     return
                 }
-                try {
-                    if (monitorAll) {
-                        prefs.interval = binding.etInterval.text.toString().toInt()
-                        prefs.delayTime = binding.etDelay.text.toString().toInt()
-                    }
-                    prefs.ignoreTime = binding.etIgnore.text.toString().toInt()
-                    prefs.periodRefresh = binding.etPeriod.text.toString().toInt()
-                    prefs.monitorKey = binding.cbMonitorKey.isChecked
-                    prefs.monitorTouch = binding.cbMonitorTouch.isChecked
-                    prefs.monitorGlobal = binding.cbMonitorGlobal.isChecked
-                    prefs.autoDetectReading = binding.cbAutoDetectReading.isChecked
-                    binding.cbMonitorGlobal.tag = null
-                    prefs.hideBackgroundTask = binding.cbHideBackgroundTask.isChecked
-                    sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
-                    Toast.makeText(applicationContext, R.string.toast_save, Toast.LENGTH_SHORT)
-                        .show()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    AlertDialog.Builder(this)
-                        .setTitle(R.string.error)
-                        .setMessage(R.string.error_empty_format)
-                        .setPositiveButton(R.string.btn_confirm) { dialog, which ->
-                            dialog.dismiss()
-                        }.show()
-                }
+                binding.layoutAccessibility.btnMonitorList.isEnabled = !cb.isChecked
+                cb.tag = cb.isChecked
+                updateIntervalVisibility(cb.isChecked)
             }
 
-            binding.btnTest -> {
-                Utils.refreshScreen(applicationContext)
-            }
+            R.id.btn_monitor_list -> startActivity(Intent(this, AppsActivity::class.java))
+            R.id.btn_reading_whitelist -> startActivity(Intent(this, AppsActivity::class.java).apply { putExtra(AppsActivity.EXTRA_MODE, AppsActivity.MODE_READING_WHITELIST) })
+            R.id.ib_reading_whitelist_help -> AlertDialog.Builder(this).setTitle(R.string.dialog_title_tip).setMessage(R.string.btn_reading_whitelist_hint).setPositiveButton(R.string.btn_confirm) { d, _ -> d.dismiss() }.show()
 
-            binding.btnExit -> onBackPressedDispatcher.onBackPressed()
+            binding.btnTest.id -> Utils.refreshScreen(applicationContext)
+            binding.btnExit.id -> onBackPressedDispatcher.onBackPressed()
         }
+    }
+
+    private fun checkAccessibilityPermission(): Boolean {
+        if (!Utils.isAccessibilityServiceEnabled(applicationContext)) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.section_title_accessibility)
+                .setMessage(R.string.dialog_msg_accessibility)
+                .setPositiveButton(R.string.btn_to_settings) { _, _ ->
+                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                }
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show()
+            return false
+        }
+        return true
+    }
+
+    private fun checkOverlayPermission(): Boolean {
+        if (!PermissionHelper.hasOverlayPermission(this)) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.section_title_overlay)
+                .setMessage(R.string.dialog_msg_overlay)
+                .setPositiveButton(R.string.btn_to_settings) { _, _ ->
+                    PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
+                }
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show()
+            return false
+        }
+        return true
+    }
+
+    private fun saveSettings(): Boolean {
+        val acc = binding.layoutAccessibility
+        val per = binding.layoutRepeatedly
+        val draw = binding.layoutDrawOver
+
+        val interval = acc.etInterval.text.toString().toIntOrNull()
+        val delay = acc.etDelay.text.toString().toIntOrNull()
+        val ignore = acc.etIgnore.text.toString().toIntOrNull()
+        val period = per.etPeriod.text.toString().toIntOrNull()
+        val tInterval = draw.etInterval.text.toString().toIntOrNull()
+        val tDelay = draw.etDelay.text.toString().toIntOrNull()
+        val tIgnore = draw.etIgnore.text.toString().toIntOrNull()
+
+        if (interval == null || delay == null || ignore == null || period == null ||
+            tInterval == null || tDelay == null || tIgnore == null) {
+            showErrorDialog()
+            return false
+        }
+
+        if (acc.cbMonitorGlobal.isChecked) {
+            prefs.interval = interval
+            prefs.delayTime = delay
+        }
+        prefs.ignoreTime = ignore
+        prefs.periodRefresh = period
+
+        prefs.monitorKey = acc.cbMonitorKey.isChecked
+        prefs.monitorGlobal = acc.cbMonitorGlobal.isChecked
+        prefs.autoDetectReading = acc.cbAutoDetectReading.isChecked
+        prefs.autoStartOnBoot = per.cbAutoStartBoot.isChecked
+        prefs.hideBackgroundTask = per.cbHideBackgroundTask.isChecked
+
+        prefs.touchInterval = tInterval
+        prefs.touchDelayTime = tDelay
+        prefs.touchIgnoreTime = tIgnore
+
+        return true
+    }
+
+    private fun showErrorDialog() {
+        AlertDialog.Builder(this).setTitle(R.string.error).setMessage(R.string.error_empty_config).setPositiveButton(R.string.btn_confirm) { d, _ -> d.dismiss() }.show()
     }
 
     override fun onResume() {
         super.onResume()
-        XLog.d("onResume: ")
-        // 请求必要权限
         requestRequiredPermissions()
         updateUI()
     }
 
     override fun onPause() {
         super.onPause()
-        XLog.d("onPause: ")
-        dialog?.dismiss()
-        dialog = null
         toggleRecentsVisibility(prefs.hideBackgroundTask)
     }
 
     private fun toggleRecentsVisibility(hide: Boolean) {
-        (getSystemService(ACTIVITY_SERVICE) as ActivityManager)
-            .appTasks
-            .firstOrNull()
-            ?.setExcludeFromRecents(hide)
+        (getSystemService(ACTIVITY_SERVICE) as ActivityManager).appTasks.firstOrNull()?.setExcludeFromRecents(hide)
     }
 
-    /**
-     * 进入前台时检查必要权限：忽略电池优化、悬浮窗。
-     * 每项权限若未授权且未处于“已提示过”状态，则弹引导；悬浮窗缺失会临时关闭服务开关。
-     * 用 prefs 中的权限标记位避免每次 onResume 重复弹窗。
-     */
     private fun requestRequiredPermissions() {
-        XLog.d("requestRequiredPermissions: 电池优化=${prefs.permissionIgnoringBatteryOptimizations}, 悬浮窗=${prefs.permissionOverlay}")
-
-        // 检查忽略电池优化权限
         if (!PermissionHelper.hasIgnoringBatteryOptimizationsPermission(this)) {
             if (prefs.permissionIgnoringBatteryOptimizations != 0) {
-                XLog.d("requestRequiredPermissions: 申请忽略电池优化权限")
                 PermissionHelper.requestIgnoreBatteryOptimizationsPermission(this)
                 prefs.permissionIgnoringBatteryOptimizations = 0
-                return
-            }
-        } else {
-            prefs.permissionIgnoringBatteryOptimizations = 1
-        }
-
-        //申请悬浮窗权限
-        if (!PermissionHelper.hasOverlayPermission(this)) {
-            if (prefs.permissionOverlay != 0) {
-                XLog.d("requestRequiredPermissions: 申请悬浮窗权限，并临时关闭服务")
-                dialog = PermissionHelper.requestOverlayPermission(this, PERMISSION_REQUEST_OVERLAY)
-                prefs.permissionOverlay = 0
-                prefs.serviceSwitch = false
-                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
-                return
-            }
-        } else {
-            prefs.permissionOverlay = 1
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PERMISSION_REQUEST_OVERLAY) {
-            if (!PermissionHelper.hasOverlayPermission(this)) {
-                Toast.makeText(this, R.string.request_permission_overlay_error, Toast.LENGTH_SHORT)
-                    .show()
             }
         }
     }
-
 }

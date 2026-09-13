@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <!-- ========================================================= -->
+        <!-- CONTENT -->
+        <!-- ========================================================= -->
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="12dp">
+
+                <!-- ========================================================= -->
+                <!-- TITLE BAR -->
+                <!-- ========================================================= -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
+
+                    <TextView
+                        android:id="@+id/tv_repeatedly_monitor"
+                        style="@style/defTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="@string/tv_repeatedly_monitor_status" />
+
+                    <TextView
+                        android:id="@+id/tv_repeatedly_monitor_status"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btn_repeatedly_on"
+                        style="@style/defButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/btn_on" />
+
+                    <Button
+                        android:id="@+id/btn_repeatedly_off"
+                        style="@style/defButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/btn_off" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/black" />
+
+                <!-- ================================================= -->
+                <!-- SYSTEM PERMISSIONS & INFO -->
+                <!-- ================================================= -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/area_margin"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="@dimen/area_margin"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_section_system_title"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:text="@string/section_title_system" />
+
+                    <Button
+                        android:id="@+id/btn_grant_battery"
+                        style="@style/statusButtonStyle"
+                        android:text="Not Granted" />
+
+                </LinearLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cl_section_system"
+                    style="@style/areaStyle"
+                    android:layout_marginTop="2dp">
+
+                    <TextView
+                        android:id="@+id/tv_battery_optimization"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:text="@string/tv_battery_optimization"
+                        app:layout_constraintBottom_toBottomOf="@+id/tv_battery_optimization_status"
+                        app:layout_constraintEnd_toStartOf="@+id/tv_battery_optimization_status"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/tv_battery_optimization_status" />
+
+                    <TextView
+                        android:id="@+id/tv_battery_optimization_status"
+                        style="@style/statusButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Not Granted"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_notifications"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="6dp"
+                        android:text="@string/tv_notifications"
+                        app:layout_constraintBottom_toBottomOf="@+id/tv_notifications_status"
+                        app:layout_constraintEnd_toStartOf="@id/tv_notifications_status"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/tv_battery_optimization_status" />
+
+                    <Button
+                        android:id="@+id/tv_notifications_status"
+                        style="@style/statusButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Not Granted"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/tv_battery_optimization_status" />
+
+                    <!-- Accessibility Service Row -->
+
+                    <!-- Overlay Permission Row -->
+
+
+                    <TextView
+                        android:id="@+id/tv_hide_background_task"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_hide_background_task"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/cb_hide_background_task"
+                        app:layout_constraintTop_toTopOf="@id/cb_hide_background_task"
+                        app:layout_constraintBottom_toBottomOf="@id/cb_hide_background_task" />
+
+                    <CheckBox
+                        android:id="@+id/cb_hide_background_task"
+                        style="@style/NoAnimCheckBox"
+                        android:layout_width="@dimen/touch_min"
+                        android:layout_height="@dimen/touch_min"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/tv_notifications_status" />
+
+                    <TextView
+                        android:id="@+id/tv_auto_start_boot"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_auto_start_boot"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/cb_auto_start_boot"
+                        app:layout_constraintTop_toTopOf="@id/cb_auto_start_boot"
+                        app:layout_constraintBottom_toBottomOf="@id/cb_auto_start_boot" />
+
+                    <CheckBox
+                        android:id="@+id/cb_auto_start_boot"
+                        style="@style/NoAnimCheckBox"
+                        android:layout_width="@dimen/touch_min"
+                        android:layout_height="@dimen/touch_min"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/cb_hide_background_task" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/black" />
+
+
+                <!-- ================================================= -->
+                <!-- REPEATEDLY REFRESH -->
+                <!-- ================================================= -->
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cl_section_repeatedly"
+                    style="@style/areaStyle"
+                    android:layout_marginTop="2dp">
+
+                    <TextView
+                        android:id="@+id/tv_period"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:text="@string/tv_period_refresh"
+                        app:layout_constraintBottom_toBottomOf="@+id/et_period"
+                        app:layout_constraintEnd_toStartOf="@+id/et_period"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <EditText
+                        android:id="@+id/et_period"
+                        style="@style/defEditStyle"
+                        android:gravity="center"
+                        android:inputType="number"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </LinearLayout>
+
+</layout>

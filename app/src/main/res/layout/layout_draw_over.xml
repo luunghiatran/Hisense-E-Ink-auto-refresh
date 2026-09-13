@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="12dp">
+
+                <!-- Management Bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
+
+                    <TextView
+                        android:id="@+id/tv_touch"
+                        style="@style/defTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="@string/tv_monitor_status" />
+
+                    <TextView
+                        android:id="@+id/tv_touch_status"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btn_touch_on"
+                        style="@style/defButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/btn_on" />
+
+                    <Button
+                        android:id="@+id/btn_touch_off"
+                        style="@style/defButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/btn_off" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/black" />
+
+                <!-- Permission Section -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    style="@style/areaStyle"
+                    android:layout_marginTop="2dp">
+
+                    <TextView
+                        android:id="@+id/tv_overlay"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="6dp"
+                        android:text="@string/section_title_overlay"
+                        app:layout_constraintBottom_toBottomOf="@+id/btn_grant_overlay"
+                        app:layout_constraintEnd_toStartOf="@+id/btn_grant_overlay"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/btn_grant_overlay" />
+
+                    <Button
+                        android:id="@+id/btn_grant_overlay"
+                        style="@style/statusButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tv_status_stop"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/black" />
+
+                <!-- Options Section -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    style="@style/areaStyle"
+                    android:layout_marginTop="2dp">
+
+                    <TextView
+                        android:id="@+id/tv_interval"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_interval"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/et_interval"
+                        app:layout_constraintTop_toTopOf="@id/et_interval"
+                        app:layout_constraintBottom_toBottomOf="@id/et_interval" />
+
+                    <EditText
+                        android:id="@+id/et_interval"
+                        style="@style/defEditStyle"
+                        android:gravity="center"
+                        android:inputType="number"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_delay"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_delay"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/et_delay"
+                        app:layout_constraintTop_toTopOf="@id/et_delay"
+                        app:layout_constraintBottom_toBottomOf="@id/et_delay" />
+
+                    <EditText
+                        android:id="@+id/et_delay"
+                        style="@style/defEditStyle"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:inputType="number"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/et_interval" />
+
+                    <TextView
+                        android:id="@+id/tv_ignore"
+                        style="@style/defTextStyle"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/tv_ignore"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/et_ignore"
+                        app:layout_constraintTop_toTopOf="@id/et_ignore"
+                        app:layout_constraintBottom_toBottomOf="@id/et_ignore" />
+
+                    <EditText
+                        android:id="@+id/et_ignore"
+                        style="@style/defEditStyle"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:inputType="number"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/et_delay" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/black" />
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </LinearLayout>
+
+</layout>

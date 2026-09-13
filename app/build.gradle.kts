@@ -4,7 +4,7 @@ import java.util.Locale
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    // alias(libs.plugins.kotlin.android) // No longer required in AGP 9.0+
 }
 
 android {
@@ -28,6 +28,10 @@ android {
         versionName = "1.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        androidResources {
+            localeFilters += listOf("en", "vi", "zh-rHK", "zh-rTW")
+        }
     }
 
     buildTypes {
@@ -45,11 +49,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    dataBinding {
-        enable = true
+    
+    // Kotlin options are now handled by AGP 9.0+ or via kotlin extension
+    
+    buildFeatures {
+        dataBinding = true
     }
 
     lint {
@@ -57,7 +61,8 @@ android {
         disable.add("ExpiredTargetSdkVersion")
     }
 
-    // 修复文件名修改
+    // 修复文件名修改 - TODO: Migrate to androidComponents API for AGP 9.0+
+    /*
     applicationVariants.all {
         val variant = this
         variant.outputs.forEach { output ->
@@ -71,6 +76,7 @@ android {
             }
         }
     }
+    */
 }
 
 // 获取时间戳的函数
@@ -83,10 +89,11 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.preference)
     implementation(libs.androidx.recyclerview)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.material)
     implementation(libs.xlog)
 }

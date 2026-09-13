@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="title_text_size">18sp</dimen>
-    <dimen name="area_text_size">13sp</dimen>
-    <dimen name="def_text_size">15sp</dimen>
-    <dimen name="def_btn_size">14sp</dimen>
-    <dimen name="btn_bg_radius">10dp</dimen>
-    <dimen name="btn_bg_broder">1dp</dimen>
-    <dimen name="area_padding">10dp</dimen>
-    <dimen name="area_padding_bottom">15dp</dimen>
-    <dimen name="area_margin">10dp</dimen>
-    <dimen name="space">20dp</dimen>
+    <dimen name="title_text_size">20sp</dimen>
+    <dimen name="area_text_size">16sp</dimen>
+    <dimen name="def_text_size">16sp</dimen>
+    <dimen name="def_btn_size">16sp</dimen>
+    <dimen name="btn_bg_radius">2dp</dimen>
+    <dimen name="btn_bg_broder">1.5dp</dimen>
+    <dimen name="area_padding">0dp</dimen>
+    <dimen name="area_padding_bottom">0dp</dimen>
+    <dimen name="area_margin">12dp</dimen>
+    <dimen name="space">24dp</dimen>
+    <dimen name="item_margin_vertical">8dp</dimen>
+    <dimen name="touch_min">48dp</dimen>
 </resources>

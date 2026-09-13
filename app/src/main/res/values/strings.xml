@@ -1,65 +1,150 @@
 <resources>
-    <string name="app_name">海信墨水屏自动刷新</string>
-    <string name="title_activity_main">墨水屏刷新</string>
-    <string name="title_activity_apps">监控应用列表</string>
-    <string name="title_activity_apps_whitelist">忽略应用列表</string>
-    <string name="toast_debug_on">调试模式已开启</string>
-    <string name="toast_debug_off">调试模式已关闭</string>
-    <string name="btn_config">配置</string>
-    <string name="tv_config_prefix">触发 | 延迟：</string>
-    <string name="dialog_title_config">配置</string>
-    <string name="dialog_config_tip">为该应用单独设置刷新参数</string>
-    <string name="hint_config_interval">触发屏幕刷新的操作次数</string>
-    <string name="hint_config_delay">触发刷新前的延迟毫秒</string>
-    <string name="accessibility_service_description">无障碍服务用于获取屏幕及按键操作次数，并根据间隔刷新墨水屏</string>
-    <string name="tv_service_status">服务状态</string>
-    <string name="tv_accessibility_status">无障碍服务状态：</string>
-    <string name="tv_status_active">已启动</string>
-    <string name="tv_status_stop">已停止</string>
-    <string name="tv_status_error">服务启动失败</string>
-    <string name="btn_on">开启</string>
-    <string name="btn_off">关闭</string>
-    <string name="btn_to_settings">去设置</string>
-    <string name="tv_monitor_status">监控状态：</string>
-    <string name="tv_interval">触发屏幕刷新间隔次数（触摸/按键）</string>
-    <string name="tv_delay">触发屏幕刷新时延迟（毫秒）</string>
-    <string name="tv_ignore">过滤时间段内连续操作（毫秒）</string>
-    <string name="tv_period_refresh">周期刷新（秒，0关闭）</string>
-    <string name="tv_config_title">参数配置</string>
-    <string name="tv_monitor_key">响应按键操作</string>
-    <string name="tv_monitor_touch">响应触摸操作</string>
-    <string name="tv_monitor_global">监控所有应用</string>
-    <string name="tv_auto_detect_reading">自动识别阅读界面</string>
-    <string name="btn_reading_whitelist_hint">自动识别界面上文字数量，大于一定阈值后判断为阅读界面。一些付费阅读应用经过加密后无法正常读取界面，需要配置忽略自动识别。</string>
-    <string name="dialog_title_tip">提示</string>
-    <string name="tv_reading_whitelist">加密阅读应用白名单</string>
-    <string name="btn_reading_whitelist">配置忽略应用</string>
-    <string name="btn_monitor_list">配置监控应用</string>
-    <string name="loading">加载中…</string>
-    <string name="btn_save">保存</string>
-    <string name="btn_back">返回</string>
-    <string name="btn_cancel">取消</string>
-    <string name="btn_exit">退出</string>
-    <string name="btn_test">测试刷新</string>
-    <string name="btn_confirm">确认</string>
-    <string name="error">错误</string>
-    <string name="toast_save">已保存</string>
-    <string name="error_empty_config">请填写完整参数</string>
-    <string name="error_empty_format">参数格式错误</string>
-    <string name="notification_title">墨水屏监控服务</string>
-    <string name="notification_text">点击配置参数</string>
-    <string name="notification_text_stop">已停止监控</string>
-    <string name="request_permission_usage_title">需要使用情况统计权限</string>
-    <string name="request_permission_usage_message">此功能需要访问应用使用情况统计信息，请前往设置中开启权限。</string>
-    <string name="request_permission_overlay_title">需要使用悬浮窗权限</string>
-    <string name="request_permission_overlay_message">此功能需要悬浮窗监控触摸事件，请前往设置中开启权限。</string>
-    <string name="request_permission_overlay_error">悬浮窗权限被拒绝，无法启动监控服务</string>
+    <string name="app_name">Hisense E-Ink Auto Refresh</string>
+    <string name="title_activity_main">E-Ink Refresh</string>
+    <string name="title_activity_apps">Monitored Apps</string>
+    <string name="title_activity_apps_whitelist">Ignored Apps</string>
 
-    <string name="notification_channel_name">服务通知</string>
-    <string name="notification_channel_description">墨水屏自动刷新服务通知</string>
-    <string name="notification_title_error">墨水屏监控服务启动失败</string>
-    <string name="notification_desc_error">服务无法启动，请点击查看详情</string>
-    <string name="notification_text_detailed">%d次响应操作后刷新屏幕，点击配置参数</string>
-    <string name="tv_hide_background_task">在「最近任务」隐藏本应用</string>
+    <string name="toast_debug_on">Debug Mode On</string>
+    <string name="toast_debug_off">Debug Mode Off</string>
 
+    <string name="btn_config">Config</string>
+    <string name="tv_config_prefix">Trigger | Delay:</string>
+
+    <string name="dialog_title_config">Settings</string>
+    <string name="dialog_config_tip">Set refresh options</string>
+
+    <string name="hint_config_interval">Actions Before Refresh</string>
+    <string name="hint_config_delay">Refresh Delay (milliseconds)</string>
+
+    <string name="accessibility_service_description">This service counts screen and button actions and refreshes the E-Ink screen when needed.</string>
+
+    <string name="tv_service_status">Service Status</string>
+    <string name="tv_accessibility_status">Accessibility</string>
+
+    <string name="tv_status_active">"Running >>"</string>
+    <string name="tv_status_stop">"Stopped ||"</string>
+    <string name="tv_status_error">Start Failed</string>
+
+    <string name="btn_monitor_repeatedly">Repeatedly</string>
+    <string name="btn_monitor_interaction">Touch 1</string>
+    <string name="btn_monitor_draw_over">Touch 2</string>
+    <string name="btn_monitor_touch_1">Touch Count 1</string>
+    <string name="btn_on">Start</string>
+    <string name="btn_apply">Apply</string>
+    <string name="btn_off">Stop</string>
+    <string name="btn_to_settings">Settings</string>
+    <string name="btn_active_hidden_api_policy">Fix Hidden API</string>
+    <string name="dialog_title_hidden_api_guide">Fix Hidden API</string>
+    <string name="dialog_message_hidden_api_guide">This step must be done on your computer with ADB, not directly inside the app.\n\n1. Connect the device with USB debugging enabled.\n2. Run:\nadb shell settings put global hidden_api_policy 0\n3. Check:\nadb shell settings get global hidden_api_policy\n\nIf the result is 0, the restriction is removed successfully.</string>
+
+    <string name="tv_monitor_status">Service</string>
+    <string name="tv_repeatedly_monitor_status">Service</string>
+
+    <string name="tv_interval">Refresh counts</string>
+    <string name="tv_delay">Wait (ms)</string>
+    <string name="tv_ignore">Min gap (ms)</string>
+    <string name="tv_period_refresh">Timer (sec)</string>
+
+    <string name="tv_config_title">Settings</string>
+
+    <string name="tv_monitor_key">Keys refresh</string>
+    <string name="tv_monitor_touch">Touch refresh</string>
+    <string name="tv_monitor_global">All apps</string>
+
+    <string name="tv_auto_detect_reading">Smart reading</string>
+
+    <string name="btn_reading_whitelist_hint">Counts the text on screen. If there is a lot of text, it is treated as a reading screen. Some paid apps hide their text, so add them to the ignore list.</string>
+
+    <string name="dialog_title_tip">Tip</string>
+
+    <string name="tv_reading_whitelist">Ignored Reading Apps</string>
+    <string name="btn_reading_whitelist">Ignored Apps</string>
+
+    <string name="btn_monitor_list">Configure Apps</string>
+
+    <string name="loading">Loading...</string>
+
+    <string name="btn_save">Save Config</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_exit">Exit</string>
+
+    <string name="btn_settings">Settings</string>
+    <string name="btn_test">Test Refresh</string>
+    <string name="btn_confirm">OK</string>
+
+    <string name="error">Error</string>
+
+    <string name="toast_save">Saved</string>
+
+    <string name="error_empty_config">Please fill in all fields</string>
+    <string name="error_empty_format">Invalid Format</string>
+
+    <string name="notification_title">E-Ink Monitoring Service</string>
+    <string name="notification_text">Tap to open Settings</string>
+    <string name="notification_text_stop">Monitoring Stopped</string>
+
+    <string name="request_permission_usage_title">Usage Access Required</string>
+    <string name="request_permission_usage_message">This feature needs access to app usage data. Please enable it in Settings.</string>
+
+    <string name="request_permission_overlay_title">Overlay Permission Required</string>
+    <string name="request_permission_overlay_message">This feature needs overlay permission to monitor touch events. Please enable it in Settings.</string>
+
+    <string name="request_permission_overlay_error">Overlay permission denied. Monitoring cannot start.</string>
+
+    <string name="notification_channel_name">Service Notifications</string>
+    <string name="notification_channel_description">Notifications for the E-Ink Auto Refresh service</string>
+
+    <string name="notification_title_error">E-Ink Service Start Failed</string>
+    <string name="notification_desc_error">Service could not start. Tap for details.</string>
+
+    <string name="notification_text_detailed">Refresh after %d actions. Tap to open Settings.</string>
+    <string name="notification_repeatedly_countdown">Next refresh in %d seconds</string>
+    <string name="notification_repeatedly_refreshing">Refreshing screen...</string>
+
+    <string name="tv_hide_background_task">Hide App</string>
+    <string name="status_granted">✓ Granted</string>
+    <string name="status_not_granted">✗ Not Granted</string>
+    <string name="toast_monitor_applied">Accessibility Monitor Applied</string>
+    <string name="toast_touch_applied">Touch Overlay Applied</string>
+    <string name="toast_repeatedly_applied">Repeatedly Refresh Applied</string>
+    <string name="dialog_msg_accessibility">Please enable Accessibility Service to use this feature.</string>
+    <string name="dialog_msg_overlay">Please grant Overlay Permission to use this feature.</string>
+
+    <!-- Section Headers (5 Permission-Based Groups) -->
+    <string name="section_title_accessibility">Accessibility</string>
+    <string name="section_desc_accessibility">Tracks screen changes and user actions</string>
+
+    <string name="section_title_overlay">Overlay</string>
+    <string name="section_desc_overlay">Desktop overlay for touch monitoring</string>
+    <string name="tv_touch_overlay">Touch Layer</string>
+    <string name="tv_touch_overlay_desc">Requires overlay permission</string>
+
+    <string name="section_title_repeatedly">Repeatedly</string>
+    <string name="section_desc_repeatedly">Auto refresh at fixed time intervals</string>
+    <string name="tv_auto_start_boot">Auto Boot</string>
+
+    <string name="section_title_reading">Reading</string>
+    <string name="section_desc_reading">Analyze content for reading screens</string>
+
+    <string name="section_title_system">System</string>
+    <string name="section_desc_system">Battery, notify, and debug</string>
+    <string name="tv_battery_optimization">Battery</string>
+    <string name="tv_notifications">Notify</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email repeatedlyally</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
 </resources>

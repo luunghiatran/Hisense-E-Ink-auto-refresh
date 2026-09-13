@@ -15,7 +15,7 @@ class AppPreferences private constructor(context: Context) {
     companion object : SingletonHolder<AppPreferences, Context>(::AppPreferences) {
         /** 应用独立刷新配置默认值：触发次数 / 延迟毫秒 */
         const val DEFAULT_APP_INTERVAL = 10
-        const val DEFAULT_APP_DELAY = 500
+        const val DEFAULT_APP_DELAY = 300
     }
 
     private val prefs: SharedPreferences =
@@ -33,10 +33,20 @@ class AppPreferences private constructor(context: Context) {
         set(value) = prefs.edit { putString("target_package_name", value) }
 
 
-    /** 主开关：是否真正开始监听与刷新 */
+    /** 主开关：是否真正开始监听与刷新 (Accessibility Service) */
     var serviceSwitch: Boolean
         get() = prefs.getBoolean("service_switch", false)
         set(value) = prefs.edit { putBoolean("service_switch", value).apply() }
+
+    /** 触摸监控开关 (Touch Overlay Service) */
+    var touchServiceSwitch: Boolean
+        get() = prefs.getBoolean("touch_service_switch", false)
+        set(value) = prefs.edit { putBoolean("touch_service_switch", value).apply() }
+
+    /** 周期刷新开关 (Repeatedly Refresh Service) */
+    var repeatedlyServiceSwitch: Boolean
+        get() = prefs.getBoolean("repeatedly_service_switch", false)
+        set(value) = prefs.edit { putBoolean("repeatedly_service_switch", value).apply() }
 
     /** 触发刷新的操作次数阈值（累计点击/按键达到该值则全屏刷新） */
     var interval: Int
@@ -48,7 +58,8 @@ class AppPreferences private constructor(context: Context) {
      * 仅在非锁屏状态下计时，锁屏停止、解锁重置。
      */
     var periodRefresh: Int
-        get() = prefs.getInt("period_refresh", 300)
+        // 提高默认间隔以减少设备唤醒次数（改为 15s = 30 分钟）
+        get() = prefs.getInt("period_refresh", 15)
         set(value) = prefs.edit { putInt("period_refresh", value).apply() }
 
     /**
@@ -67,27 +78,42 @@ class AppPreferences private constructor(context: Context) {
 
     /** 两次操作的最小间隔（毫秒），小于该间隔视为连点被过滤 */
     var ignoreTime: Int
-        get() = prefs.getInt("ignore_time", 2000)
+        get() = prefs.getInt("ignore_time", 500)
         set(value) = prefs.edit { putInt("ignore_time", value).apply() }
+
+    /** Touch Overlay: 触发刷新的操作次数阈值 */
+    var touchInterval: Int
+        get() = prefs.getInt("touch_interval", DEFAULT_APP_INTERVAL)
+        set(value) = prefs.edit { putInt("touch_interval", value).apply() }
+
+    /** Touch Overlay: 延迟刷新时间 (ms) */
+    var touchDelayTime: Int
+        get() = prefs.getInt("touch_delay_time", DEFAULT_APP_DELAY)
+        set(value) = prefs.edit { putInt("touch_delay_time", value).apply() }
+
+    /** Touch Overlay: 最小操作间隔 (ms) */
+    var touchIgnoreTime: Int
+        get() = prefs.getInt("touch_ignore_time", 500)
+        set(value) = prefs.edit { putInt("touch_ignore_time", value).apply() }
 
     /** 是否监听触摸操作 */
     var monitorTouch: Boolean
-        get() = prefs.getBoolean("monitor_touch", true)
+        get() = prefs.getBoolean("monitor_touch", false)
         set(value) = prefs.edit { putBoolean("monitor_touch", value).apply() }
 
     /** 是否监听按键操作 */
     var monitorKey: Boolean
-        get() = prefs.getBoolean("monitor_key", true)
+        get() = prefs.getBoolean("monitor_key", false)
         set(value) = prefs.edit { putBoolean("monitor_key", value).apply() }
 
     /** 是否监控所有应用（true 时忽略 targetPackageName，对所有前台应用生效） */
     var monitorGlobal: Boolean
-        get() = prefs.getBoolean("monitor_global", true)
+        get() = prefs.getBoolean("monitor_global", false)
         set(value) = prefs.edit { putBoolean("monitor_global", value).apply() }
 
     /** 是否开启“自动识别阅读界面”（读屏统计文字 > 阈值才计次，否则跳过） */
     var autoDetectReading: Boolean
-        get() = prefs.getBoolean("auto_detect_reading", true)
+        get() = prefs.getBoolean("auto_detect_reading", false)
         set(value) = prefs.edit { putBoolean("auto_detect_reading", value).apply() }
 
     /** 阅读白名单：逗号分隔的关键字，包名命中则跳过读屏、直接视为阅读界面（加密小说 App 用） */
@@ -104,6 +130,11 @@ class AppPreferences private constructor(context: Context) {
     var permissionOverlay: Int
         get() = prefs.getInt("permission_overlay", -1)
         set(value) = prefs.edit { putInt("permission_overlay", value).apply() }
+
+    /** 开机自启开关：是否允许在设备开机后自动启动服务（默认 false，用户可在 UI 中打开） */
+    var autoStartOnBoot: Boolean
+        get() = prefs.getBoolean("auto_start_on_boot", false)
+        set(value) = prefs.edit { putBoolean("auto_start_on_boot", value).apply() }
 
     /** 使用情况统计权限状态：1=已授权, 0=未授权/待申请, -1=初始未判断 */
     var permissionUsageStats: Int

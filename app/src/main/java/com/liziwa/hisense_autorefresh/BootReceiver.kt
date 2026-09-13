@@ -1,15 +1,14 @@
 package com.liziwa.hisense_autorefresh
 
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.provider.Settings
-import android.view.accessibility.AccessibilityManager
-import androidx.core.content.ContextCompat
 import com.elvishew.xlog.XLog
+import com.liziwa.hisense_autorefresh.service.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.service.EInkRepeatedlyRefreshService
+import com.liziwa.hisense_autorefresh.service.EInkTouchOverlayService
 import com.liziwa.hisense_autorefresh.util.NotificationUtils
+import com.liziwa.hisense_autorefresh.util.PermissionHelper
 import com.liziwa.hisense_autorefresh.util.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,8 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * 开机广播接收器：设备启动完成后，若用户此前开启过服务（serviceState），
- * 延迟 5 秒后检查无障碍服务状态——已启用则自启服务，否则弹错误通知引导用户开启。
+ * 开机广播接收器：设备启动完成后，自启已开启的服务。
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -28,34 +26,35 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             XLog.d("BootReceiver: onReceive 开机完成")
-            // 仅当用户上次开启了服务才尝试自启
-            if (AppPreferences.getInstance(context).serviceState) {
+            val prefs = AppPreferences.getInstance(context)
+            if (prefs.autoStartOnBoot) {
                 scope.launch {
-                    delay(5000) // 延迟等待系统就绪再检查，避免过早 startForeground 失败
-                    checkAccessibilityService(context)
+                    delay(5000)
+                    checkAndStartServices(context, prefs)
                 }
-            } else {
-                XLog.d("BootReceiver: serviceState=false，跳过自启")
             }
         }
     }
 
-    private fun checkAccessibilityService(context: Context) {
-        XLog.d("BootReceiver: checkAccessibilityService")
-        // 检查无障碍服务是否已启用
-        if (!Utils.isAccessibilityServiceEnabled(context)) {
-            XLog.w("BootReceiver: 无障碍服务未启用，弹通知提醒")
-            showEnableServiceNotification(context)
-        } else {
-            // 如果已启用，直接启动服务
-            XLog.i("BootReceiver: 无障碍服务已启用，启动前台服务")
-            val serviceIntent = Intent(context, EInkAccessibilityService::class.java)
-            context.startForegroundService(serviceIntent)
+    private fun checkAndStartServices(context: Context, prefs: AppPreferences) {
+        // 1. Accessibility Service
+        if (prefs.serviceSwitch) {
+            if (Utils.isAccessibilityServiceEnabled(context)) {
+                context.startForegroundService(Intent(context, EInkAccessibilityService::class.java))
+            } else {
+                NotificationUtils.getInstance(context).createErrorNotificationChannel()
+                NotificationUtils.getInstance(context).showServiceFailedNotification()
+            }
         }
-    }
 
-    private fun showEnableServiceNotification(context: Context) {
-        NotificationUtils.getInstance(context).createErrorNotificationChannel()
-        NotificationUtils.getInstance(context).showServiceFailedNotification()
+        // 2. Touch Overlay Service
+        if (prefs.touchServiceSwitch && PermissionHelper.hasOverlayPermission(context)) {
+            context.startForegroundService(Intent(context, EInkTouchOverlayService::class.java))
+        }
+
+        // 3. Repeatedly Refresh Service
+        if (prefs.repeatedlyServiceSwitch) {
+            context.startForegroundService(Intent(context, EInkRepeatedlyRefreshService::class.java))
+        }
     }
 }

@@ -82,6 +82,30 @@ object PermissionHelper {
         return enable
     }
 
+    /** 检查通知权限（Android 13+） */
+    fun hasNotificationsPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    /** 打开通知权限设置页 */
+    fun requestNotificationsPermission(context: Context) {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            }
+        } else {
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = "package:${context.packageName}".toUri()
+            }
+        }
+        context.startActivity(intent)
+    }
+
     fun hasUsageStatsPermission(context: Context): Boolean {
         // 检查使用情况统计权限
         val appOps = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager

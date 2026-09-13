@@ -1,6 +1,6 @@
 [versions]
-agp = "8.12.2"
-kotlin = "2.2.10"
+agp = "9.3.1"
+kotlin = "2.4.20"
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.9.3"
 appcompat = "1.7.1"
@@ -10,6 +10,7 @@ constraintlayout = "2.2.1"
 recyclerview = "1.4.0"
 kotlinxCoroutinesAndroid = "1.10.2"
 xlog = "1.11.1"
+preference = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -21,6 +22,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 xlog = { group = "com.elvishew", name = "xlog", version.ref = "xlog" }
+androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

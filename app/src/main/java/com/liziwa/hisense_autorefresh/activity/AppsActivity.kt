@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.elvishew.xlog.XLog
 import com.liziwa.hisense_autorefresh.view.AppListAdapter
 import com.liziwa.hisense_autorefresh.AppPreferences
-import com.liziwa.hisense_autorefresh.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.service.EInkAccessibilityService
 import com.liziwa.hisense_autorefresh.R
 import com.liziwa.hisense_autorefresh.util.Utils
 import com.liziwa.hisense_autorefresh.databinding.ActivityAppsBinding
@@ -226,7 +226,7 @@ class AppsActivity : AppCompatActivity(), View.OnClickListener, CoroutineScope {
                     prefs.appRefreshConfigs = configBuilder.toString()
                     XLog.d("onClick: 保存应用独立配置=${configBuilder}")
                 }
-                sendBroadcast(Intent(EInkAccessibilityService.Companion.ACTION_CONFIG_CHANGE))
+                sendBroadcast(Intent(EInkAccessibilityService.ACTION_CONFIG_CHANGE))
                 Toast.makeText(applicationContext, R.string.toast_save, Toast.LENGTH_SHORT).show()
             }
 

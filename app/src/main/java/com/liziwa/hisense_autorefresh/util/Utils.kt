@@ -2,6 +2,7 @@ package com.liziwa.hisense_autorefresh.util
 
 import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK
+import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Context.ACCESSIBILITY_SERVICE
@@ -10,11 +11,10 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.RequiresApi
 import com.elvishew.xlog.XLog
-import com.liziwa.hisense_autorefresh.EInkAccessibilityService
+import com.liziwa.hisense_autorefresh.service.EInkAccessibilityService
 import java.lang.reflect.InvocationTargetException
 
 /**
@@ -48,6 +48,18 @@ object Utils {
             // 找到了方法但执行抛异常
             XLog.e("refreshScreen: 刷新执行异常（error2）", ex)
         }
+    }
+
+    /** 判断指定服务是否正在运行 */
+    @Suppress("DEPRECATION")
+    fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
     }
 
     /**

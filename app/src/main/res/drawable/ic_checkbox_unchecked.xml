@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ô checkbox CHƯA chọn - viền đậm 2.5dp, kích thước 32dp, tối ưu e-ink -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.5"
+        android:pathData="M4,4 L28,4 L28,28 L4,28 Z" />
+</vector>

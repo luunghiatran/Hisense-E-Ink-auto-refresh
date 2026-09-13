@@ -1,115 +1,119 @@
-# Hisense E-ink Auto Refresh（海信墨水屏自动刷新）
+# Hisense E-ink Auto Refresh（Hisense E-Ink Auto Refresh）
 
-海信墨水屏设备的**强制全屏刷新**工具。监控前台应用内的触摸 / 按键操作次数，达到设定阈值后调用厂商 EPD 接口执行一次全局刷新，有效消除阅读时的墨水屏残影。
+A **forced full-screen refresh** tool for Hisense E-Ink devices. It monitors touch / key operation counts in foreground applications and invokes the vendor EPD interface to perform a global refresh when the configured threshold is reached, effectively eliminating E-Ink ghosting during reading.
 
-> 参考自 RefreshAi 项目；因原项目无中文且功能有限，故自行实现并补充了阅读界面自动识别、周期刷新、调试模式等能力。
-
----
-
-## 功能特性
-
-- **操作计数刷新**：统计指定范围内的触摸 / 按键操作，累计达到「刷新间隔」后自动刷新一次。
-- **监控范围可配**：
-  - 监控所有应用（默认）
-  - 仅监控指定应用（「配置监控应用」）
-- **自动识别阅读界面**：开启后，切换界面延迟 1 秒读屏判定。阅读界面特征为「**正文文字 > 150 字，且 文字数 / 节点数 > 10**」（文字密集、节点稀疏），避免菜单、密集列表等非阅读界面误刷新。
-- **忽略应用（白名单）**：部分付费阅读应用加密后无法读屏，可加入白名单，**直接视为阅读界面并跳过读屏**，优先级最高（即使是系统应用命中白名单也生效）。
-- **系统应用自动跳过**：切换到的界面若是系统应用，默认不作为阅读界面、跳过读屏。
-- **非阅读界面兜底重识别**：同一 activity 内多个 fragment 切换时无障碍事件不触发，故在非阅读界面累计操作 **5 次**后自动重新读屏识别，防止漏判。
-- **周期刷新**：按固定时间间隔（秒）强制刷新一次，与操作计数相互独立。默认 300 秒（5 分钟），填 0 关闭。仅在非锁屏状态计时，锁屏暂停、解锁重置；若距上次刷新不足 30 秒则跳过，避免与操作触发刷新重复；触发成功后清零操作计数。
-- **调试模式**：连续点击主界面标题 **10 次**开启（默认关闭）。开启后 XLog 输出线程信息 / 调用栈 / 边框，并将日志写入文件（`xlog/` 目录，按天归档、保留 7 天）；关闭后仅输出 Logcat、不写文件。
-- **开机自启**：设备重启后自动拉起无障碍服务与监控。
-- **应用级独立刷新参数**：在「监控应用列表」中，每个应用可单独配置「触发刷新次数」与「触发延迟」，覆盖全局默认值（默认 10 次 / 500ms），应用名后方配置按钮**默认禁用，勾选该应用后才可点击**。
+> Referenced from the RefreshAi project; since the original project had no Chinese support and limited functionality, it was implemented independently and supplemented with automatic reading screen detection, repeatedly refresh, debug mode, and other capabilities.
 
 ---
 
-## 工作原理
+## Features
 
-- 通过 **AccessibilityService**（`TYPE_WINDOW_STATE_CHANGED` + `TYPE_VIEW_CLICKED`）监听前台界面切换与用户操作。
-- 界面切换时根据「白名单 → 系统应用 → 读屏判定」的优先级确定是否为阅读界面。
-- 读屏判定遍历当前窗口节点，**只统计自身及所有祖先均可见的文本内容**（剔除被隐藏节点），并综合文字量与节点密度判定阅读界面。
-- 周期刷新由 `Handler` 循环计时驱动，独立于操作计数。
-- 刷新通过反射调用海信 `com.hmct.epd.EpdManager.forceClear()` 实现。
-- 配置变更通过 `ACTION_CONFIG_CHANGE` 广播**热更新**，无需重启服务。
+- **Operation Count Refresh**: Counts touch / key operations within the specified scope and automatically refreshes once the accumulated count reaches the "Refresh Interval".
+- **Configurable Monitoring Scope**:
+  - Monitor all applications (default)
+  - Monitor only specified applications ("Configure Monitored Apps")
+- **Automatic Reading Screen Detection**: When enabled, screen analysis is performed 1 second after a screen switch. A reading screen is characterized by "**Body text > 150 characters, and Character Count / Node Count > 10**" (text-dense, node-sparse), preventing accidental refreshes on non-reading screens such as menus and dense lists.
+- **Ignored Applications (Whitelist)**: Some paid reading applications cannot be analyzed after encryption. They can be added to the whitelist and will be **directly treated as reading screens and skip screen analysis**, with the highest priority (effective even if a system application matches the whitelist).
+- **Automatic Skip for System Applications**: If the switched screen belongs to a system application, it is not treated as a reading screen by default and screen analysis is skipped.
+- **Fallback Re-detection for Non-reading Screens**: Accessibility events may not be triggered when switching between multiple fragments within the same activity, so screen analysis is automatically performed again after **5 operations** on a non-reading screen to prevent missed detection.
+- **Repeatedly Refresh**: Forces a refresh at a fixed time interval (seconds), independent of operation counting. Default is 300 seconds (5 minutes), set 0 to disable. Timing only runs when the screen is unlocked; pauses when locked and resets after unlocking. If less than 30 seconds have passed since the last refresh, the refresh is skipped to avoid duplication with operation-triggered refreshes. Operation count is reset after a successful refresh.
+- **Debug Mode**: Enabled by clicking the main screen title **10 times** consecutively (disabled by default). When enabled, XLog outputs thread information / call stacks / borders and writes logs to files (`xlog/` directory, archived daily, retained for 7 days). When disabled, logs are only output to Logcat and no files are written.
+- **Auto Start on Boot**: Automatically starts the accessibility service and monitoring after device reboot.
+- **Application-specific Refresh Parameters**: In the "Monitored Applications" list, each application can independently configure "Refresh Trigger Count" and "Trigger Delay", overriding the global default values (default 10 times / 500ms). The configuration button behind the application name is **disabled by default and can only be clicked after the application is selected**.
 
 ---
 
-## 权限与依赖
+## How It Works
 
-| 权限 / 组件 | 用途 |
+- Uses **AccessibilityService** (`TYPE_WINDOW_STATE_CHANGED` + `TYPE_VIEW_CLICKED`) to monitor foreground screen switches and user operations.
+- When the screen changes, whether it is a reading screen is determined according to the priority of "Whitelist → System Application → Screen Analysis".
+- Screen analysis traverses the current window nodes and **only counts text content whose node itself and all ancestor nodes are visible** (excluding hidden nodes), and determines whether it is a reading screen based on text volume and node density.
+- Repeatedly refresh is driven by a `Handler` loop timer and is independent of operation counting.
+- Refresh is implemented through reflection by calling Hisense `com.hmct.epd.EpdManager.forceClear()`.
+- Configuration changes are **hot-updated** through the `ACTION_CONFIG_CHANGE` broadcast without restarting the service.
+
+---
+
+## Permissions and Dependencies
+
+| Permission / Component | Purpose |
 | --- | --- |
-| 无障碍服务（AccessibilityService） | 监听界面切换与操作事件（核心） |
-| `SYSTEM_ALERT_WINDOW` | 叠加层监听触摸（可选，开启触摸监控时需要） |
-| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | 防止后台被省电策略杀掉 |
-| `RECEIVE_BOOT_COMPLETED` | 开机自启 |
-| `QUERY_ALL_PACKAGES` | 枚举已安装应用（Android 11+ 包可见性） |
-| `POST_NOTIFICATIONS` | 前台服务通知 |
+| Accessibility Service (AccessibilityService) | Monitor screen switches and operation events (core) |
+| `SYSTEM_ALERT_WINDOW` | Overlay monitoring of touch events (optional, required when touch monitoring is enabled) |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Prevent background process termination by battery optimization policies |
+| `RECEIVE_BOOT_COMPLETED` | Auto start on boot |
+| `QUERY_ALL_PACKAGES` | Enumerate installed applications (Android 11+ package visibility) |
+| `POST_NOTIFICATIONS` | Foreground service notifications |
 
-> 注意：强制刷新依赖海信私有 EPD 接口 `com.hmct.epd.EpdManager`，非海信设备 / 不同系统版本可能不可用（会记录错误日志，不影响其他功能）。
+> Note: Forced refresh depends on the Hisense private EPD interface `com.hmct.epd.EpdManager`. It may not be available on non-Hisense devices or different system versions (error logs will be recorded and other functions will not be affected).
 
 ---
 
-## 使用步骤
+## Usage
 
-1. **安装 ADB 驱动**：在电脑上安装 adb 工具（请自行搜索下载）。
-2. **开启 USB 调试**：打开设备的「开发者选项 → USB 调试」，连接电脑并在弹窗中选择 **允许**。
-3. **解除隐藏 API 限制**（关键）：
+1. **Install ADB Driver**: Install the adb tool on your computer (please search and download it yourself).
+2. **Enable USB Debugging**: Open "Developer Options → USB Debugging" on the device, connect it to your computer, and select **Allow** in the popup.
+3. **Remove Hidden API Restrictions** (Important):
    ```bash
    adb shell settings put global hidden_api_policy 0
-   adb shell settings get global hidden_api_policy   # 输出 0 表示成功
+   adb shell settings get global hidden_api_policy   # Output 0 indicates success
    ```
-4. **安装并授权**：重启设备后安装 APK，授予无障碍服务、悬浮窗等所需权限。
-5. **测试刷新**：在应用内点击 **测试刷新**，若墨水屏能正常触发一次全局刷新，说明接口访问正常，即可自由配置监控参数。
+
+4. **Install and Grant Permissions**: After rebooting the device, install the APK and grant the required permissions such as Accessibility Service and Overlay Window.
+
+5. **Test Refresh**: Click **Test Refresh** in the application. If the E-Ink screen performs a global refresh successfully, the interface is accessible and monitoring parameters can be configured freely.
 
 ---
 
-## 配置说明
+## Configuration
 
-| 配置项 | 说明 |
+| Option | Description |
 | --- | --- |
-| 监控所有应用 | 开启后对所有前台应用计数；关闭则需通过「配置监控应用」指定目标 |
-| 响应触摸 / 按键 | 分别控制是否统计触摸与按键操作 |
-| 刷新间隔 | 累计多少次操作触发一次刷新 |
-| 忽略时间 | 两次操作的最小间隔（毫秒），过滤连续重复触发 |
-| 自动识别阅读界面 | 开启后按读屏文字量与节点密度判定阅读界面（见上） |
-| 周期刷新（秒） | 固定间隔强制刷新，0 关闭，默认 300（5 分钟） |
-| 配置忽略应用 | 进入「忽略应用列表」，勾选加密 / 特殊应用加入白名单 |
-| 配置监控应用 | 进入「监控应用列表」，勾选需要监控的应用。勾选后应用名后方「配置」按钮方可启用，点击可单独设置该应用的刷新次数与延迟（默认 10 次 / 2000ms），列表项实时显示当前配置 |
-| 调试模式 | 主标题连点 10 次开启，开启后日志写文件并输出详细信息 |
+| Monitor All Applications | Count operations for all foreground applications when enabled; when disabled, targets must be specified through "Configure Monitored Apps" |
+| Respond to Touch / Key | Independently controls whether touch and key operations are counted |
+| Refresh Interval | Number of accumulated operations required to trigger a refresh |
+| Ignore Time | Minimum interval between two operations (milliseconds), used to filter consecutive duplicate triggers |
+| Automatically Detect Reading Screens | Determines reading screens based on text volume and node density when enabled (see above) |
+| Repeatedly Refresh (seconds) | Force refresh at a fixed interval, 0 to disable, default 300 (5 minutes) |
+| Configure Ignored Applications | Open the "Ignored Applications" list and add encrypted / special applications to the whitelist |
+| Configure Monitored Applications | Open the "Monitored Applications" list and select applications to monitor. After selection, the "Configure" button next to the application name is enabled. Clicking it allows independent configuration of refresh count and delay for that application (default 10 times / 2000ms), and the current configuration is displayed in real time |
+| Debug Mode | Enabled by clicking the main title 10 times; logs are written to files and detailed information is output |
 
 ---
 
-## 调试模式（排查问题）
+## Debug Mode (Troubleshooting)
 
-- **开启**：在主界面连续点击顶部标题文字 10 次，弹出「调试模式已开启」提示。
-- **效果**：XLog 同时启用线程信息、调用栈、边框，并将日志写入 `Android/data/<包名>/files/xlog/`（按天归档、保留 7 天）。
-- **关闭**：再次连点标题 10 次，日志停止写文件、恢复精简格式。
-- 调试日志对定位「为何没刷新 / 为何识别为阅读界面 / 周期刷新计时」等问题非常有帮助。
-
----
-
-## 注意事项
-
-- 自动识别依赖读屏，仅对**可见文本**生效；加密、WebView、画布绘制等非标准文本界面可能识别失败，建议加入白名单。
-- 系统应用、自身应用界面默认不参与读屏判定。
-- 墨水屏刷新较慢，配置过低的刷新间隔可能带来明显闪烁，请按阅读习惯调整。
-- 调试模式会落盘日志，长期开启可能占用少量存储空间（已限制保留 7 天）。
+- **Enable**: Click the top title text 10 times consecutively on the main screen. A "Debug Mode Enabled" message will appear.
+- **Effect**: XLog enables thread information, call stacks, and borders simultaneously, and writes logs to `Android/data/<package name>/files/xlog/` (archived daily and retained for 7 days).
+- **Disable**: Click the title 10 times again. Logs stop being written to files and revert to the simplified format.
+- Debug logs are very helpful for locating issues such as "Why didn't it refresh?", "Why was it recognized as a reading screen?", and "Repeatedly refresh timing".
 
 ---
 
-## 截图
+## Notes
 
-<img src="screenshot/screenshot_1.png" width="20%" /> <img src="screenshot/screenshot_2.png" width="20%" /> <img src="screenshot/screenshot_3.png" width="20%" />
+- Automatic detection depends on screen analysis and is only effective for **visible text**. Encrypted content, WebView, canvas-rendered content, and other non-standard text interfaces may not be detected correctly and should be added to the whitelist.
+- System applications and this application's own screens do not participate in screen analysis by default.
+- E-Ink screen refresh is relatively slow. Setting the refresh interval too low may cause noticeable flashing. Please adjust according to your reading habits.
+- Debug mode writes logs to storage. Keeping it enabled for a long time may consume a small amount of storage space (retention is limited to 7 days).
 
 ---
 
-## 工程结构
+## Screenshots
 
-- `EInkAccessibilityService.kt`：核心无障碍服务，负责界面监听、读屏判定、计数、周期刷新与刷新触发。
-- `AppPreferences.kt`：SharedPreferences 配置封装（含周期刷新、调试模式等开关）。
-- `activity/MainActivity.kt`：主配置界面（含调试模式连点入口、自定义标题栏）。
-- `activity/AppsActivity.kt`：应用选择列表（复用为「监控应用」与「忽略应用」两种模式，含自定义标题栏、返回按钮与每应用独立配置弹窗）。
-- `view/AppListAdapter.kt`：应用列表适配器（DataBinding），含 `ListItem`（应用名 / 包名 / 图标 / 选中态 / 独立刷新参数），负责配置按钮按勾选态启用与配置展示。
-- `util/Utils.kt`：刷新接口、系统应用判断、应用枚举等工具。
-- `util/NotificationUtils.kt` / `BootReceiver.kt` / `MyApp.kt`：通知、开机自启、XLog 初始化（按调试模式切换文件输出）。
-- `util/DateFileNameGenerator.kt`：XLog 按日期归档文件名生成器。
+screenshot/screenshot_1.png
+screenshot/screenshot_2.png
+screenshot/screenshot_3.png
+
+---
+
+## Project Structure
+
+- `EInkAccessibilityService.kt`: Core accessibility service responsible for screen monitoring, screen analysis, counting, repeatedly refresh, and refresh triggering.
+- `AppPreferences.kt`: SharedPreferences configuration wrapper (including repeatedly refresh, debug mode switches, etc.).
+- `activity/MainActivity.kt`: Main configuration screen (including the debug mode entry and custom title bar).
+- `activity/AppsActivity.kt`: Application selection list (reused for both "Monitored Applications" and "Ignored Applications" modes, including custom title bar, back button, and per-application configuration dialog).
+- `view/AppListAdapter.kt`: Application list adapter (DataBinding), including `ListItem` (application name / package name / icon / selection state / independent refresh parameters), responsible for enabling the configuration button according to selection state and displaying configuration information.
+- `util/Utils.kt`: Utilities such as refresh interface, system application detection, and application enumeration.
+- `util/NotificationUtils.kt` / `BootReceiver.kt` / `MyApp.kt`: Notifications, auto start on boot, and XLog initialization (switching file output according to debug mode).
+- `util/DateFileNameGenerator.kt`: XLog date-based archive filename generator.

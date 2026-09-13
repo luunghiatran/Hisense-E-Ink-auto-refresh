@@ -4,11 +4,11 @@
 
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
-
 
     <!-- 声明 Android 11 所需权限 -->
     <uses-permission
@@ -17,9 +17,11 @@
 
     <!-- 处理低版本兼容 -->
     <queries>
+
         <!-- 查询所有应用（Android 11+） -->
         <intent>
             <action android:name="android.intent.action.MAIN" />
+
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
     </queries>
@@ -47,7 +49,7 @@
         </activity>
 
         <service
-            android:name=".EInkAccessibilityService"
+            android:name=".service.EInkAccessibilityService"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
@@ -57,6 +59,26 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
+        </service>
+        <service
+            android:name=".service.EInkRepeatedlyRefreshService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:ignore="ForegroundServiceType">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
+                android:value="repeatedly_refresh" />
+        </service>
+        <service
+            android:name=".service.EInkTouchOverlayService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:ignore="ForegroundServiceType">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
+                android:value="touch_overlay" />
         </service>
 
         <receiver
