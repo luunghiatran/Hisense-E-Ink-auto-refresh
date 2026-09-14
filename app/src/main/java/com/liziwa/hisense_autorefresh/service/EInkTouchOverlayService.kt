@@ -10,6 +10,7 @@ import android.graphics.PixelFormat
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import android.view.Gravity
 import android.view.MotionEvent
@@ -25,15 +26,17 @@ import com.liziwa.hisense_autorefresh.util.Utils
 
 /**
  * Service dedicated to capturing touch events using a transparent overlay.
+ * Uses WakeLock to ensure reliability while the screen is on.
  */
 class EInkTouchOverlayService : Service(), View.OnTouchListener {
 
     private lateinit var prefs: AppPreferences
     private var touchServiceSwitch = false
-    private var interval = 5
-    private var delayTime = 100
-    private var ignoreTime = 1000
+    private var interval = 10
+    private var delayTime = 0
+    private var ignoreTime = 2000
     private var serviceTitle = ""
+    private var isScreenOn = true
 
     private var clickCount = 0
     private var lastClickTime: Long = 0
@@ -43,6 +46,7 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
 
     private val handler = Handler(Looper.getMainLooper())
     private val notificationUtils by lazy { NotificationUtils.getInstance(this) }
+    private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
         const val ACTION_CONFIG_CHANGE = "com.liziwa.hisense_autorefresh.ACTION_CONFIG_CHANGE"
@@ -50,10 +54,24 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
         var isRunning = false
     }
 
-    private val configReceiver = object : BroadcastReceiver() {
+    private val eventReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            XLog.d("TouchOverlay: Received broadcast ${intent?.action}")
-            if (intent?.action == ACTION_CONFIG_CHANGE) updateConfig()
+            when (intent?.action) {
+                ACTION_CONFIG_CHANGE -> updateConfig()
+                Intent.ACTION_SCREEN_OFF -> {
+                    XLog.d("TouchOverlay: Screen OFF, disabling overlay")
+                    isScreenOn = false
+                    deleteTouchCapture()
+                    releaseWakeLock()
+                    updateNotification(getString(R.string.notification_text_stop) + " (Screen Off)")
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    XLog.d("TouchOverlay: Screen ON, enabling overlay")
+                    isScreenOn = true
+                    acquireWakeLock()
+                    updateConfig()
+                }
+            }
         }
     }
 
@@ -64,10 +82,14 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
         prefs = AppPreferences.getInstance(applicationContext)
         serviceTitle = getString(R.string.btn_monitor_draw_over)
 
-        val filter = IntentFilter(ACTION_CONFIG_CHANGE)
-        ContextCompat.registerReceiver(this, configReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        val filter = IntentFilter().apply {
+            addAction(ACTION_CONFIG_CHANGE)
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
+        ContextCompat.registerReceiver(this, eventReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
-        // Important: startForeground must be called within 5 seconds of service start
+        acquireWakeLock()
         val initialNotification = notificationUtils.buildNotification(serviceTitle, getString(R.string.notification_text))
         startForeground(NOTIFICATION_ID, initialNotification)
         
@@ -75,6 +97,8 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
     }
 
     fun updateConfig() {
+        if (!isScreenOn) return
+
         touchServiceSwitch = prefs.touchServiceSwitch
         interval = prefs.touchInterval
         delayTime = prefs.touchDelayTime
@@ -95,7 +119,6 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
     }
 
     private fun updateNotification(text: String) {
-        XLog.d("TouchOverlay: notify with text: $text")
         val notification = notificationUtils.buildNotification(serviceTitle, text)
         notificationUtils.getManager().notify(NOTIFICATION_ID, notification)
     }
@@ -114,7 +137,6 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
 
-        // Small 2x2 view, placed in a corner
         val lp = WindowManager.LayoutParams(
             2, 2,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -129,7 +151,6 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
         try {
             wm.addView(touchView, lp)
             addTouchView = true
-            XLog.d("TouchOverlay: View added to WindowManager")
         } catch (e: Exception) {
             XLog.e("TouchOverlay: Error adding view", e)
         }
@@ -142,7 +163,6 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
         try {
             wm.removeView(touchView)
             addTouchView = false
-            XLog.d("TouchOverlay: View removed from WindowManager")
         } catch (e: Exception) {
             XLog.e("TouchOverlay: Error removing view", e)
         }
@@ -150,47 +170,52 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        // Log all outside events for debugging
         if (event?.action == MotionEvent.ACTION_OUTSIDE) {
-            XLog.d("TouchOverlay: onTouch ACTION_OUTSIDE")
             userOperating()
         }
         return false
     }
 
     private fun userOperating() {
-        if (!touchServiceSwitch) {
-            XLog.d("TouchOverlay: userOperating ignored (switch OFF)")
-            return
-        }
+        if (!touchServiceSwitch || !isScreenOn) return
         
         val currentTime = SystemClock.elapsedRealtime()
         val timeDiff = currentTime - lastClickTime
         
         if (timeDiff > ignoreTime) {
             clickCount++
-            XLog.i("TouchOverlay: HIT! count=$clickCount/$interval")
-
             if (clickCount >= interval) {
-                XLog.i("TouchOverlay: Threshold met, refreshing screen in ${delayTime}ms")
                 handler.removeCallbacksAndMessages(null)
                 handler.postDelayed({
-                    XLog.i("TouchOverlay: Executing refreshScreen()")
                     Utils.refreshScreen(applicationContext)
                 }, delayTime.toLong())
                 clickCount = 0
             }
-            
-            val statusText = getString(R.string.notification_text_detailed, interval - clickCount)
-            updateNotification(statusText)
-        } else {
-            XLog.d("TouchOverlay: Debounced (gap: ${timeDiff}ms)")
+            updateNotification(getString(R.string.notification_text_detailed, interval - clickCount))
         }
         lastClickTime = currentTime
     }
 
+    private fun acquireWakeLock() {
+        if (wakeLock == null) {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "HisenseRefresh:TouchWakeLock")
+            wakeLock?.acquire()
+            XLog.d("TouchOverlay: WakeLock acquired")
+        }
+    }
+
+    private fun releaseWakeLock() {
+        wakeLock?.let {
+            if (it.isHeld) {
+                it.release()
+                XLog.d("TouchOverlay: WakeLock released")
+            }
+        }
+        wakeLock = null
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        XLog.d("TouchOverlay: onStartCommand")
         updateConfig()
         return START_STICKY
     }
@@ -202,7 +227,8 @@ class EInkTouchOverlayService : Service(), View.OnTouchListener {
         isRunning = false
         handler.removeCallbacksAndMessages(null)
         deleteTouchCapture()
-        runCatching { unregisterReceiver(configReceiver) }
+        releaseWakeLock()
+        runCatching { unregisterReceiver(eventReceiver) }
         super.onDestroy()
     }
 }

@@ -133,7 +133,7 @@ class AppPreferences private constructor(context: Context) {
 
     /** 开机自启开关：是否允许在设备开机后自动启动服务（默认 false，用户可在 UI 中打开） */
     var autoStartOnBoot: Boolean
-        get() = prefs.getBoolean("auto_start_on_boot", false)
+        get() = prefs.getBoolean("auto_start_on_boot", true)
         set(value) = prefs.edit { putBoolean("auto_start_on_boot", value).apply() }
 
     /** 使用情况统计权限状态：1=已授权, 0=未授权/待申请, -1=初始未判断 */

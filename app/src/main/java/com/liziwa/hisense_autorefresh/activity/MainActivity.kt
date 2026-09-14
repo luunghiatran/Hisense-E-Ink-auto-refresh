@@ -2,6 +2,8 @@ package com.liziwa.hisense_autorefresh.activity
 
 import android.Manifest
 import android.app.ActivityManager
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -22,6 +24,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -301,7 +304,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.ib_reading_whitelist_help -> AlertDialog.Builder(this).setTitle(R.string.dialog_title_tip).setMessage(R.string.btn_reading_whitelist_hint).setPositiveButton(R.string.btn_confirm) { d, _ -> d.dismiss() }.show()
 
             binding.btnTest.id -> Utils.refreshScreen(applicationContext)
-            binding.btnExit.id -> onBackPressedDispatcher.onBackPressed()
+            binding.btnExit.id -> {
+//                onBackPressedDispatcher.onBackPressed()
+
+                val notification = NotificationCompat.Builder(this, "service_channel")
+                    .setSmallIcon(R.drawable.icon_small)
+                    .setContentTitle("SystemUI test")
+                    .setContentText("Test icon")
+                    .setCategory(Notification.CATEGORY_RECOMMENDATION)
+                    .build()
+                val notificationManager: NotificationManager = this@MainActivity.getSystemService(NotificationManager::class.java)
+                notificationManager.notify(9999, notification)
+            }
         }
     }
 

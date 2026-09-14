@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.os.PowerManager
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
@@ -47,9 +48,11 @@ class EInkAccessibilityService : AccessibilityService() {
     private var appConfigs: Map<String, Pair<Int, Int>> = emptyMap()
     private var serviceTitle = ""
 
-    private var isScreenLocked = false
+    private var isScreenOn = true
     private var nonReadingOpCount = 0
     private val ignoreApps = arrayOf("com.android.systemui")
+
+    private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
         const val ACTION_CONFIG_CHANGE = "com.liziwa.hisense_autorefresh.ACTION_CONFIG_CHANGE"
@@ -64,17 +67,31 @@ class EInkAccessibilityService : AccessibilityService() {
         private const val NON_READING_REDETECT_COUNT = 5
     }
 
-    private val configReceiver = object : BroadcastReceiver() {
+    private val eventReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_CONFIG_CHANGE -> updateConfig()
-                Intent.ACTION_SCREEN_OFF -> { isScreenLocked = true; clickCount = 0; setReadingState(false) }
-                Intent.ACTION_SCREEN_ON -> { isScreenLocked = false; setReadingState(false) }
+                Intent.ACTION_SCREEN_OFF -> {
+                    XLog.d("AccService: Screen OFF")
+                    isScreenOn = false
+                    clickCount = 0
+                    setReadingState(false)
+                    releaseWakeLock()
+                    updateNotification(getString(R.string.notification_text_stop) + " (Screen Off)")
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    XLog.d("AccService: Screen ON")
+                    isScreenOn = true
+                    acquireWakeLock()
+                    updateConfig()
+                }
             }
         }
     }
 
     fun updateConfig() {
+        if (!isScreenOn) return
+
         serviceSwitch = prefs.serviceSwitch
         interval = prefs.interval
         ignoreTime = prefs.ignoreTime
@@ -98,7 +115,6 @@ class EInkAccessibilityService : AccessibilityService() {
         isTarget = monitorGlobal || choiceApps.isEmpty()
         isReading = !autoDetectReading
 
-        XLog.d("AccService config: switch=$serviceSwitch, isTarget=$isTarget, interval=$interval")
         updateNotification(if (serviceSwitch) getString(R.string.notification_text) else getString(R.string.notification_text_stop))
     }
 
@@ -113,12 +129,14 @@ class EInkAccessibilityService : AccessibilityService() {
         prefs = AppPreferences.getInstance(applicationContext)
         serviceTitle = getString(R.string.btn_monitor_interaction)
         
-        val filter = IntentFilter(ACTION_CONFIG_CHANGE).apply {
+        val filter = IntentFilter().apply {
+            addAction(ACTION_CONFIG_CHANGE)
             addAction(Intent.ACTION_SCREEN_OFF)
             addAction(Intent.ACTION_SCREEN_ON)
         }
-        ContextCompat.registerReceiver(this, configReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        ContextCompat.registerReceiver(this, eventReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         
+        acquireWakeLock()
         startForeground(NOTIFICATION_ID, notificationUtils.buildNotification(serviceTitle, getString(R.string.notification_text)))
         updateConfig()
     }
@@ -127,7 +145,6 @@ class EInkAccessibilityService : AccessibilityService() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 MSG_REFRESH_DISPLAY -> {
-                    XLog.i("AccService: EXECUTING REFRESH SCREEN")
                     Utils.refreshScreen(applicationContext)
                 }
                 MSG_DETECT_READING -> detectReadingScreen()
@@ -137,7 +154,6 @@ class EInkAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        XLog.d("AccService: onServiceConnected")
         serviceInfo = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or AccessibilityEvent.TYPE_VIEW_CLICKED
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
@@ -150,28 +166,21 @@ class EInkAccessibilityService : AccessibilityService() {
     }
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
-        if (!serviceSwitch || event == null || isScreenLocked) return false
+        if (!serviceSwitch || event == null || !isScreenOn) return false
         if (event.keyCode in listOf(KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_HOME, KeyEvent.KEYCODE_APP_SWITCH, KeyEvent.KEYCODE_MENU)) return false
-        
-        if (event.action == KeyEvent.ACTION_DOWN && monitorKey && isTarget) {
-            XLog.d("AccService: Key event detected: ${event.keyCode}")
-            userOperating()
-        }
+        if (event.action == KeyEvent.ACTION_DOWN && monitorKey && isTarget) userOperating()
         return false
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        if (!serviceSwitch) return
+        if (!serviceSwitch || !isScreenOn) return
         
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
                 handleWindowStateChanged(event)
             }
             AccessibilityEvent.TYPE_VIEW_CLICKED -> {
-                if (isTarget) {
-                    XLog.d("AccService: View clicked in target app")
-                    userOperating()
-                }
+                if (isTarget) userOperating()
             }
         }
     }
@@ -179,11 +188,9 @@ class EInkAccessibilityService : AccessibilityService() {
     private fun handleWindowStateChanged(event: AccessibilityEvent) {
         val newPackage = event.packageName?.toString() ?: return
         if (newPackage in ignoreApps) return
-
         val newActivity = event.className?.toString()
         if (newPackage == currentPackage && (newActivity == null || newActivity == currentActivity)) return
 
-        XLog.d("AccService: window changed to $newPackage / $newActivity")
         currentPackage = newPackage
         if (newActivity != null) currentActivity = newActivity
         isTarget = monitorGlobal || choiceApps.isEmpty() || choiceApps.contains(currentPackage)
@@ -208,11 +215,10 @@ class EInkAccessibilityService : AccessibilityService() {
     private fun isInReadingWhitelist(pkg: String) = readingWhitelist.any { pkg.contains(it, ignoreCase = true) }
 
     private fun detectReadingScreen() {
-        if (!serviceSwitch || !isTarget) return
+        if (!serviceSwitch || !isTarget || !isScreenOn) return
         val root = rootInActiveWindow ?: return
         val result = countScreenText(root)
         val reading = result.textCount > READ_TEXT_THRESHOLD && (result.nodeCount > 0 && result.textCount / result.nodeCount > READ_RATIO_THRESHOLD)
-        XLog.d("AccService: reading detection result=$reading (text=${result.textCount}, nodes=${result.nodeCount})")
         setReadingState(reading)
         if (!reading) {
             clickCount = 0
@@ -253,7 +259,6 @@ class EInkAccessibilityService : AccessibilityService() {
 
     private fun setReadingState(reading: Boolean) {
         if (isReading != reading) {
-            XLog.d("AccService: reading state changed to $reading")
             isReading = reading
             clickCount = 0
             nonReadingOpCount = 0
@@ -261,12 +266,11 @@ class EInkAccessibilityService : AccessibilityService() {
     }
 
     private fun userOperating() {
-        if (packageName == currentPackage) return
+        if (packageName == currentPackage || !isScreenOn) return
         
         if (autoDetectReading && !isReading) {
             if (++nonReadingOpCount >= NON_READING_REDETECT_COUNT) {
                 nonReadingOpCount = 0
-                XLog.d("AccService: non-reading op limit reached, re-detecting screen")
                 myHandler.removeMessages(MSG_DETECT_READING)
                 myHandler.sendEmptyMessageDelayed(MSG_DETECT_READING, DETECT_DELAY_MS)
             }
@@ -279,36 +283,46 @@ class EInkAccessibilityService : AccessibilityService() {
         
         if (timeDiff > ignoreTime) {
             clickCount++
-            XLog.d("AccService: VALID OPERATION. clickCount=$clickCount/${config.first}")
-
             if (clickCount >= config.first) {
-                XLog.d("AccService: Threshold met, scheduling refresh in ${config.second}ms")
                 myHandler.removeMessages(MSG_REFRESH_DISPLAY)
                 myHandler.sendEmptyMessageDelayed(MSG_REFRESH_DISPLAY, config.second.toLong())
                 clickCount = 0
             }
             updateNotification(getString(R.string.notification_text_detailed, config.first - clickCount))
-        } else {
-            XLog.d("AccService: operation ignored (gap too small: ${timeDiff}ms)")
         }
         lastClickTime = currentTime
     }
 
-    override fun onInterrupt() {
-        XLog.d("AccService: onInterrupt")
+    private fun acquireWakeLock() {
+        if (wakeLock == null) {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "HisenseRefresh:AccWakeLock")
+            wakeLock?.acquire()
+            XLog.d("AccService: WakeLock acquired")
+        }
     }
-    
+
+    private fun releaseWakeLock() {
+        wakeLock?.let {
+            if (it.isHeld) {
+                it.release()
+                XLog.d("AccService: WakeLock released")
+            }
+        }
+        wakeLock = null
+    }
+
+    override fun onInterrupt() {}
     override fun onUnbind(intent: Intent?): Boolean {
-        XLog.d("AccService: onUnbind")
         myHandler.removeCallbacksAndMessages(null)
         return super.onUnbind(intent)
     }
 
     override fun onDestroy() {
         isRunning = false
-        XLog.d("AccService: onDestroy")
+        releaseWakeLock()
         myHandler.removeCallbacksAndMessages(null)
-        runCatching { unregisterReceiver(configReceiver) }
+        runCatching { unregisterReceiver(eventReceiver) }
         super.onDestroy()
     }
 }
